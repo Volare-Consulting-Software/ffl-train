@@ -1,0 +1,16 @@
+node_modules
+.next
+coverage
+src/generated
+test
+scripts
+*.log
+.env
+.env.*
+!.env.example
+.git
+.github
+.playwright-mcp
+*.md
+Dockerfile
+.dockerignore
