@@ -6,5 +6,4 @@ export interface TripOddsReport {
   teams: TeamTripOdds[];
   simulations: number;
   remainingGames: number;
-  isSample: boolean;
 }

@@ -29,7 +29,6 @@ export class MonteCarloTripOddsService implements TripOddsService {
       teams,
       simulations: SIMULATIONS,
       remainingGames: league.matchups.filter((matchup) => !matchup.completed && matchup.awayTeamId !== null).length,
-      isSample: league.isSample,
     };
     this.cache = { key, report };
     return report;

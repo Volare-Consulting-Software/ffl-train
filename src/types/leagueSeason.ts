@@ -6,6 +6,4 @@ export interface LeagueSeason {
   season: number;
   teams: LeagueTeam[];
   matchups: LeagueMatchup[];
-  /** True when the data is the built-in sample league rather than ESPN. */
-  isSample: boolean;
 }
