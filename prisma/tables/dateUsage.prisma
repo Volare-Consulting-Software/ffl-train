@@ -1,0 +1,12 @@
+model DateUsage {
+  id            Int      @id @default(autoincrement())
+  clientId      String
+  departureDate DateTime @db.Date
+  weekStart     DateTime @db.Date
+  createdAt     DateTime @default(now())
+
+  @@unique([clientId, departureDate])
+  @@index([clientId, weekStart])
+  @@index([departureDate])
+  @@map("date_usages")
+}

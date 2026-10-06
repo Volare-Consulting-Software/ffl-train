@@ -1,0 +1,9 @@
+model Station {
+  code      String @id
+  name      String
+  timeZone  String
+  latitude  Float
+  longitude Float
+
+  @@map("stations")
+}

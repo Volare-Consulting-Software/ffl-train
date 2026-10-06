@@ -1,0 +1,13 @@
+model Trip {
+  id          String     @id
+  routeId     String
+  serviceId   String
+  trainNumber String
+  headsign    String
+  shapeId     String?
+  route       TrainRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  stopTimes   StopTime[]
+
+  @@index([serviceId])
+  @@map("trips")
+}
