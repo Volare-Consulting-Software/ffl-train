@@ -1,0 +1,77 @@
+name: release
+
+# Runs when a GitHub Release is published: applies pending Prisma migrations to Neon, syncs the app's
+# configuration onto the Lambda, points the Lambda at the released image, then promotes it to :latest.
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Idempotent: `prisma migrate deploy` applies only pending migrations, never drops data.
+  # Migrate uses Neon's direct (non-pooled) connection.
+  db-deploy:
+    uses: Volare-Consulting-Software/.github/.github/workflows/prisma-deploy.yml@main
+    with:
+      checkout-ref: ${{ github.event.release.tag_name }}
+      environment-name: production
+    secrets:
+      DATABASE_URL: ${{ secrets.DIRECT_URL }}
+
+  # Copy each setting from GitHub (secrets for credentials, variables for plain values) onto the Lambda's
+  # environment, so GitHub stays the single place they're edited. One at a time: concurrent Lambda
+  # configuration updates conflict.
+  sync-env:
+    needs: db-deploy
+    strategy:
+      max-parallel: 1
+      matrix:
+        var-name: [DATABASE_URL, SERPAPI_KEY, ESPN_S2, ESPN_SWID, CLIENT_ID_SALT, ESPN_LEAGUE_ID, ESPN_SEASON]
+    uses: Volare-Consulting-Software/.github/.github/workflows/set-lambda-env-var.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      function-name: ffl-train
+      var-name: ${{ matrix.var-name }}
+      aws-region: us-east-1
+      environment-name: production
+    secrets:
+      var-value: ${{ secrets[matrix.var-name] || vars[matrix.var-name] }}
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+
+  # Update the Lambda function to the released image tag.
+  deploy:
+    needs: sync-env
+    uses: Volare-Consulting-Software/.github/.github/workflows/deploy-aws-lambda.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      function-name: ffl-train
+      image-name: ffl-train
+      image-tag: ${{ github.event.release.tag_name }}
+      aws-region: us-east-1
+    secrets:
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+
+  # Registry-side retag of the released version image to :latest (no rebuild).
+  promote-latest:
+    needs: deploy
+    uses: Volare-Consulting-Software/.github/.github/workflows/push-container-image.yml@main
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    with:
+      registry: ecr
+      aws-region: us-east-1
+      image-name: ffl-train
+      source-tag: ${{ github.event.release.tag_name }}
+      dest-tags: latest
+    secrets:
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}

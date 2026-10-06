@@ -1,0 +1,67 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  # Lint, unit tests and a production build. Runs on non-draft PRs and on main.
+  test:
+    if: ${{ github.event.pull_request.draft != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npx eslint src scripts test
+      - name: Unit tests
+        run: npx vitest run
+      - name: Build
+        run: npm run build
+
+  # Build + push the image to ECR on main pushes only (PRs never push).
+  # Publishes the immutable <MAJ.MIN>.<run_number> tag; :latest moves on release.
+  image:
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    uses: Volare-Consulting-Software/.github/.github/workflows/push-container-image.yml@main
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    with:
+      registry: ecr
+      aws-region: us-east-1
+      image-name: ffl-train
+      version-package-json: package.json
+      dockerfile: ./Dockerfile
+      build-context: .
+      include-version-tag: true
+      include-latest-tag: false
+    secrets:
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+
+  # Draft the GitHub Release an operator publishes to trigger release.yml.
+  release:
+    needs: image
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    uses: Volare-Consulting-Software/.github/.github/workflows/draft-release.yml@main
+    permissions:
+      contents: write
+    with:
+      tag-version: ${{ needs.image.outputs.image-tag-version }}
+      image-ref: ${{ needs.image.outputs.image-ref }}
