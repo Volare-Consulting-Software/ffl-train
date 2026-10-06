@@ -46,7 +46,7 @@ export function TripOddsTable({ report }: TripOddsTableProps) {
               </th>
               <th className="h-12 whitespace-nowrap px-4 font-semibold">
                 <span className="inline-flex items-center gap-1.5">
-                  On the trip
+                  Riding the train
                   <InfoTooltip label="How trip odds are calculated">
                     Last place rides, plus one of the other {report.teams.length - 1} people picked by the wheel. So a person&apos;s
                     odds are their chance of finishing last, plus 1 in {report.teams.length - 1} of the rest:
