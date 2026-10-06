@@ -178,3 +178,45 @@ body {
 .map-monochrome-dark .leaflet-tile-pane {
   filter: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
 }
+
+/* react-day-picker in brand colors: a filled ECU Purple selected day (a fill, so it also works on dark). */
+.ffl-date-picker .rdp-root {
+  --rdp-accent-color: var(--brand-primary);
+  --rdp-accent-background-color: var(--surface-selected);
+  --rdp-today-color: var(--brand-primary);
+  --rdp-day-height: 2.5rem;
+  --rdp-day-width: 2.5rem;
+  --rdp-day_button-height: 2.25rem;
+  --rdp-day_button-width: 2.25rem;
+  font-family: var(--font-sans);
+}
+
+.ffl-date-picker .rdp-selected .rdp-day_button {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary-on);
+  font-weight: 700;
+}
+
+.ffl-date-picker .rdp-day_button:hover:not([disabled]) {
+  background: var(--surface-selected);
+}
+
+.ffl-date-picker .rdp-selected .rdp-day_button:hover {
+  background: var(--brand-primary-hover);
+}
+
+.ffl-date-picker .rdp-dropdown {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ffl-date-picker .rdp-root {
+    --rdp-today-color: var(--text-primary);
+  }
+
+  .ffl-date-picker .rdp-chevron {
+    fill: var(--text-primary);
+  }
+}

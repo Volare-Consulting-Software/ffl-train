@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { DatePicker } from "@/components/DatePicker/DatePicker";
 import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
 import { ItinerarySkeleton } from "@/components/ItinerarySkeleton/ItinerarySkeleton";
@@ -140,15 +141,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
             <p className="mt-1 text-fg-secondary">May allah have mercy on your soul...</p>
           </div>
         </div>
-        <label className="flex flex-col gap-1 text-sm font-semibold text-fg">
-          Departure date
-          <input
-            type="date"
-            value={date}
-            onChange={(event) => void changeDate(event.target.value)}
-            className="h-10 rounded-lg border border-line bg-surface-sunken px-3 font-normal text-fg focus-visible:border-brand"
-          />
-        </label>
+        <DatePicker label="Departure date" value={date} onChange={(nextDate) => void changeDate(nextDate)} />
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
