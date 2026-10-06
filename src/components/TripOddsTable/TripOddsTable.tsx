@@ -36,7 +36,17 @@ export function TripOddsTable({ report }: TripOddsTableProps) {
               <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Record</th>
               <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Points for</th>
               <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Loser bracket</th>
-              <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Last place</th>
+              <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">
+                <span className="inline-flex items-center gap-1.5">
+                  Last place
+                  <InfoTooltip label="How last place odds are calculated">
+                    We replay the rest of the season {report.simulations.toLocaleString()} times. Your record so far is locked
+                    in, and each remaining game is scored from your points for per game, so high scorers win more of them.
+                    Standings sort by record, then points for. The bottom 6 play the loser bracket, where 11th and 12th only
+                    have to lose twice instead of three times. This is how often you finished dead last.
+                  </InfoTooltip>
+                </span>
+              </th>
               <th className="h-12 whitespace-nowrap px-4 font-semibold">
                 <span className="inline-flex items-center gap-1.5">
                   On the trip
