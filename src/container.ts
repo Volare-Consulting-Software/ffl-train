@@ -5,7 +5,7 @@ import { type AirportLocator, AirportLocatorToken } from "@/interfaces/airportLo
 import { type DateRateLimiter, DateRateLimiterToken } from "@/interfaces/dateRateLimiter";
 import { type DateUsageRepository, DateUsageRepositoryToken } from "@/interfaces/dateUsageRepository";
 import { type FantasyLeagueClient, FantasyLeagueClientToken } from "@/interfaces/fantasyLeagueClient";
-import { type FlightQuoteRepository, FlightQuoteRepositoryToken } from "@/interfaces/flightQuoteRepository";
+import { type FlightSearchRepository, FlightSearchRepositoryToken } from "@/interfaces/flightSearchRepository";
 import { type FlightQuoteService, FlightQuoteServiceToken } from "@/interfaces/flightQuoteService";
 import { type FlightSearchClient, FlightSearchClientToken } from "@/interfaces/flightSearchClient";
 import { type PickRepository, PickRepositoryToken } from "@/interfaces/pickRepository";
@@ -21,7 +21,7 @@ import { LeaguePickerSuggester } from "@/logic/LeaguePickerSuggester";
 import { MonteCarloTripOddsService } from "@/logic/MonteCarloTripOddsService";
 import { PrismaAirportLocator } from "@/logic/PrismaAirportLocator";
 import { PrismaDateUsageRepository } from "@/logic/PrismaDateUsageRepository";
-import { PrismaFlightQuoteRepository } from "@/logic/PrismaFlightQuoteRepository";
+import { PrismaFlightSearchRepository } from "@/logic/PrismaFlightSearchRepository";
 import { PrismaPickRepository } from "@/logic/PrismaPickRepository";
 import { PrismaTransitRepository } from "@/logic/PrismaTransitRepository";
 import { SampleFantasyLeagueClient } from "@/logic/SampleFantasyLeagueClient";
@@ -37,7 +37,7 @@ container.register<TrainRouter>(TrainRouterToken, { useClass: ConnectionScanRout
 container.register<AirportLocator>(AirportLocatorToken, { useClass: PrismaAirportLocator }, singleton);
 container.register<PickRepository>(PickRepositoryToken, { useClass: PrismaPickRepository }, singleton);
 container.register<DateUsageRepository>(DateUsageRepositoryToken, { useClass: PrismaDateUsageRepository }, singleton);
-container.register<FlightQuoteRepository>(FlightQuoteRepositoryToken, { useClass: PrismaFlightQuoteRepository }, singleton);
+container.register<FlightSearchRepository>(FlightSearchRepositoryToken, { useClass: PrismaFlightSearchRepository }, singleton);
 container.register<FlightSearchClient>(FlightSearchClientToken, { useClass: SerpApiFlightSearchClient }, singleton);
 // The sample league is an explicit opt-in for local previews before ESPN is connected.
 container.register<FantasyLeagueClient>(FantasyLeagueClientToken, {

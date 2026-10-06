@@ -1,5 +1,6 @@
 import { Dices } from "lucide-react";
 
+import { InfoTooltip } from "@/components/InfoTooltip/InfoTooltip";
 import { LOSER_BRACKET_SIZE } from "@/logic/LoserBracketSimulator";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 
@@ -36,7 +37,18 @@ export function TripOddsTable({ report }: TripOddsTableProps) {
               <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Points for</th>
               <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Loser bracket</th>
               <th className="h-12 whitespace-nowrap px-4 text-right font-semibold">Last place</th>
-              <th className="h-12 whitespace-nowrap px-4 font-semibold">On the trip</th>
+              <th className="h-12 whitespace-nowrap px-4 font-semibold">
+                <span className="inline-flex items-center gap-1.5">
+                  On the trip
+                  <InfoTooltip label="How trip odds are calculated">
+                    Last place rides, plus one of the other {report.teams.length - 1} people picked by the wheel. So a person&apos;s
+                    odds are their chance of finishing last, plus 1 in {report.teams.length - 1} of the rest:
+                    <span className="mt-1 block font-semibold">
+                      Last place + (1 − Last place) ÷ {report.teams.length - 1}
+                    </span>
+                  </InfoTooltip>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
