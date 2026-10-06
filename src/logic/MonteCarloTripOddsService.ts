@@ -6,7 +6,7 @@ import { LoserBracketSimulator, seededRandom } from "@/logic/LoserBracketSimulat
 import type { LeagueSeason } from "@/types/leagueSeason";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 
-const SIMULATIONS = 20_000;
+const SIMULATIONS = 5_000;
 
 /** Runs the loser bracket simulation over the league's current results, reusing it until the scores change. */
 @injectable()
@@ -29,7 +29,6 @@ export class MonteCarloTripOddsService implements TripOddsService {
       teams,
       simulations: SIMULATIONS,
       remainingGames: league.matchups.filter((matchup) => !matchup.completed && matchup.awayTeamId !== null).length,
-      isSample: league.isSample,
     };
     this.cache = { key, report };
     return report;

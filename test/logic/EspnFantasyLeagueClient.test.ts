@@ -14,7 +14,6 @@ describe("toLeagueSeason", () => {
       { teamId: 1, ownerName: "Sam Rivera" },
       { teamId: 2, ownerName: "Queen City Crowns" },
     ]);
-    expect(season.isSample).toBe(false);
   });
 
   it("toLeagueSeason_schedule_keepsRegularSeasonAndMarksUndecidedWeeksUnplayed", () => {

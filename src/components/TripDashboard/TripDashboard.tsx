@@ -1,12 +1,14 @@
 "use client";
 
-import { TrainFront } from "lucide-react";
+import { Loader2, TrainFront } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { DatePicker } from "@/components/DatePicker/DatePicker";
 import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
+import { ItinerarySkeleton } from "@/components/ItinerarySkeleton/ItinerarySkeleton";
 import { MapLegend } from "@/components/MapLegend/MapLegend";
 import { TripOddsTable } from "@/components/TripOddsTable/TripOddsTable";
 import { TripTable } from "@/components/TripTable/TripTable";
@@ -36,6 +38,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
   const [selectedPickId, setSelectedPickId] = useState<number | null>(initialSummaries[0]?.pick.id ?? null);
   const [detail, setDetail] = useState<TripDetail | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [loadedRouteKey, setLoadedRouteKey] = useState<string | null>(null);
   const [flightDrawer, setFlightDrawer] = useState<FlightPanelState | null>(null);
 
   useEffect(() => {
@@ -43,12 +46,14 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
       return;
     }
     let cancelled = false;
+    const routeKey = `${selectedPickId}|${date}`;
     fetch(`/api/trips/${selectedPickId}?date=${date}`)
       .then(async (response) => {
         const body = await response.json();
         if (cancelled) {
           return;
         }
+        setLoadedRouteKey(routeKey);
         if (response.ok) {
           setDetail(body as TripDetail);
           setDetailError(null);
@@ -57,11 +62,18 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
           setDetailError((body as { error?: string }).error ?? "Route unavailable");
         }
       })
-      .catch(() => !cancelled && setDetailError("Route unavailable"));
+      .catch(() => {
+        if (!cancelled) {
+          setLoadedRouteKey(routeKey);
+          setDetailError("Route unavailable");
+        }
+      });
     return () => {
       cancelled = true;
     };
   }, [selectedPickId, date]);
+
+  const loadingRoute = selectedPickId !== null && loadedRouteKey !== `${selectedPickId}|${date}`;
 
   const changeDate = useCallback(
     async (nextDate: string) => {
@@ -129,15 +141,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
             <p className="mt-1 text-fg-secondary">May allah have mercy on your soul...</p>
           </div>
         </div>
-        <label className="flex flex-col gap-1 text-sm font-semibold text-fg">
-          Departure date
-          <input
-            type="date"
-            value={date}
-            onChange={(event) => void changeDate(event.target.value)}
-            className="h-10 rounded-lg border border-line bg-surface-sunken px-3 font-normal text-fg focus-visible:border-brand"
-          />
-        </label>
+        <DatePicker label="Departure date" value={date} onChange={(nextDate) => void changeDate(nextDate)} />
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -152,12 +156,26 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
           {tripOdds && <TripOddsTable report={tripOdds} />}
         </section>
         <section aria-label="Route map" className="flex flex-col gap-3">
-          <div className="h-[32rem] overflow-hidden rounded-lg border border-line">
+          <div className="relative h-[32rem] overflow-hidden rounded-lg border border-line" aria-busy={loadingRoute}>
             <RouteMap detail={detail} />
+            {loadingRoute && (
+              <div className="absolute inset-0 z-[500] flex animate-pulse items-center justify-center bg-surface-sunken/70">
+                <span className="flex items-center gap-2 rounded-full bg-surface-overlay px-4 py-2 text-sm font-medium text-fg shadow-[var(--shadow-overlay)]">
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  Loading route…
+                </span>
+              </div>
+            )}
           </div>
           <MapLegend />
-          {detailError && <p className="text-sm text-error">{detailError}</p>}
-          {detail && <ItineraryDetails detail={detail} />}
+          {loadingRoute ? (
+            <ItinerarySkeleton />
+          ) : (
+            <>
+              {detailError && <p className="text-sm text-error">{detailError}</p>}
+              {detail && <ItineraryDetails detail={detail} />}
+            </>
+          )}
         </section>
       </div>
 
