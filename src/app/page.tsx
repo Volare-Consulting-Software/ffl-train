@@ -17,7 +17,6 @@ export default async function Home({ searchParams }: HomeProps) {
     <TripDashboard
       initialDate={date}
       initialSummaries={dashboard.summaries}
-      suggestion={dashboard.suggestion}
       tripOdds={dashboard.tripOdds}
     />
   );

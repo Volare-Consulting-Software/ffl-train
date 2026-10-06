@@ -8,11 +8,9 @@ import { useCallback, useEffect, useState } from "react";
 import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
 import { MapLegend } from "@/components/MapLegend/MapLegend";
-import { NextPickerBanner } from "@/components/NextPickerBanner/NextPickerBanner";
 import { TripOddsTable } from "@/components/TripOddsTable/TripOddsTable";
 import { TripTable } from "@/components/TripTable/TripTable";
 import type { FlightPanelState } from "@/types/flightPanelState";
-import type { PickerSuggestion } from "@/types/pickerSuggestion";
 import type { TripDetail } from "@/types/tripDetail";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 import type { TripSummary } from "@/types/tripSummary";
@@ -27,11 +25,10 @@ const LIMIT_PAGE = "/limit-max";
 export interface TripDashboardProps {
   initialDate: string;
   initialSummaries: TripSummary[];
-  suggestion: PickerSuggestion | null;
   tripOdds: TripOddsReport | null;
 }
 
-export function TripDashboard({ initialDate, initialSummaries, suggestion, tripOdds }: TripDashboardProps) {
+export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripDashboardProps) {
   const router = useRouter();
   const [date, setDate] = useState(initialDate);
   const [summaries, setSummaries] = useState(initialSummaries);
@@ -142,8 +139,6 @@ export function TripDashboard({ initialDate, initialSummaries, suggestion, tripO
           />
         </label>
       </header>
-
-      <NextPickerBanner suggestion={suggestion} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section aria-label="Picked destinations" className="flex flex-col gap-6">
