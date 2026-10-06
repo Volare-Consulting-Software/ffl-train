@@ -1,9 +1,10 @@
 import { injectable } from "tsyringe";
 
 import type { FantasyLeagueClient } from "@/interfaces/fantasyLeagueClient";
-import type { TeamWeekScore } from "@/types/teamWeekScore";
+import type { LeagueSeason } from "@/types/leagueSeason";
 
 const ESPN_LEAGUE_URL = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons";
+const REGULAR_SEASON_TIER = "NONE";
 
 interface EspnMember {
   id: string;
@@ -29,20 +30,21 @@ interface EspnMatchupSide {
 interface EspnMatchup {
   matchupPeriodId: number;
   winner: string;
+  playoffTierType?: string;
   home?: EspnMatchupSide;
   away?: EspnMatchupSide;
 }
 
-interface EspnLeagueResponse {
+export interface EspnLeagueResponse {
   members?: EspnMember[];
   teams?: EspnTeam[];
   schedule?: EspnMatchup[];
 }
 
-/** Weekly scores from ESPN's fantasy football league API. */
+/** Teams and the regular-season schedule from ESPN's fantasy football league API. */
 @injectable()
 export class EspnFantasyLeagueClient implements FantasyLeagueClient {
-  async getCompletedWeekScores(season: number): Promise<TeamWeekScore[]> {
+  async getSeason(season: number): Promise<LeagueSeason> {
     const leagueId = process.env.ESPN_LEAGUE_ID;
     if (!leagueId) {
       throw new Error("ESPN_LEAGUE_ID is not set");
@@ -58,38 +60,35 @@ export class EspnFantasyLeagueClient implements FantasyLeagueClient {
     if (!response.ok) {
       throw new Error(`ESPN league request failed with ${response.status}`);
     }
-    return toWeekScores((await response.json()) as EspnLeagueResponse);
+    return toLeagueSeason(season, (await response.json()) as EspnLeagueResponse);
   }
 }
 
 /**
- * Flattens decided matchups into one score per team per week, labeled with the team owner's name
- * (falling back to the team name). Undecided (in-progress) weeks are left out.
+ * Maps ESPN's league payload to teams labeled with the owner's name (falling back to the team name)
+ * and the regular-season schedule. ESPN playoff matchups are left out; an undecided week is unplayed.
  */
-export function toWeekScores(league: EspnLeagueResponse): TeamWeekScore[] {
+export function toLeagueSeason(season: number, league: EspnLeagueResponse): LeagueSeason {
   const memberNames = new Map(
     (league.members ?? []).map((member) => [
       member.id,
       `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim() || member.displayName || "",
     ]),
   );
-  const ownerNames = new Map(
-    (league.teams ?? []).map((team) => {
-      const ownerId = team.primaryOwner ?? team.owners?.[0];
-      const teamName = team.name ?? `${team.location ?? ""} ${team.nickname ?? ""}`.trim();
-      return [team.id, (ownerId && memberNames.get(ownerId)) || teamName];
-    }),
-  );
-  return (league.schedule ?? [])
-    .filter((matchup) => matchup.winner !== "UNDECIDED")
-    .flatMap((matchup) =>
-      [matchup.home, matchup.away]
-        .filter((side): side is EspnMatchupSide => side !== undefined)
-        .map((side) => ({
-          teamId: side.teamId,
-          ownerName: ownerNames.get(side.teamId) || `Team ${side.teamId}`,
-          week: matchup.matchupPeriodId,
-          points: side.totalPoints,
-        })),
-    );
+  const teams = (league.teams ?? []).map((team) => {
+    const ownerId = team.primaryOwner ?? team.owners?.[0];
+    const teamName = team.name ?? `${team.location ?? ""} ${team.nickname ?? ""}`.trim();
+    return { teamId: team.id, ownerName: (ownerId && memberNames.get(ownerId)) || teamName || `Team ${team.id}` };
+  });
+  const matchups = (league.schedule ?? [])
+    .filter((matchup) => (matchup.playoffTierType ?? REGULAR_SEASON_TIER) === REGULAR_SEASON_TIER && matchup.home)
+    .map((matchup) => ({
+      week: matchup.matchupPeriodId,
+      homeTeamId: matchup.home!.teamId,
+      awayTeamId: matchup.away?.teamId ?? null,
+      homePoints: matchup.home!.totalPoints,
+      awayPoints: matchup.away?.totalPoints ?? 0,
+      completed: matchup.winner !== "UNDECIDED",
+    }));
+  return { season, teams, matchups, isSample: false };
 }

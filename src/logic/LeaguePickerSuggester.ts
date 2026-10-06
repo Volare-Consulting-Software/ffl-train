@@ -3,6 +3,7 @@ import { inject, injectable } from "tsyringe";
 import { type FantasyLeagueClient, FantasyLeagueClientToken } from "@/interfaces/fantasyLeagueClient";
 import { type PickRepository, PickRepositoryToken } from "@/interfaces/pickRepository";
 import type { PickerSuggester } from "@/interfaces/pickerSuggester";
+import { completedWeekScores } from "@/lib/leagueScores";
 import type { PickerSuggestion } from "@/types/pickerSuggestion";
 
 /** Suggests the highest scorer who hasn't picked yet for the first completed week still missing a pick. */
@@ -14,10 +15,8 @@ export class LeaguePickerSuggester implements PickerSuggester {
   ) {}
 
   async suggest(season: number): Promise<PickerSuggestion | null> {
-    const [scores, picks] = await Promise.all([
-      this.leagueClient.getCompletedWeekScores(season),
-      this.pickRepository.listForSeason(season),
-    ]);
+    const [league, picks] = await Promise.all([this.leagueClient.getSeason(season), this.pickRepository.listForSeason(season)]);
+    const scores = completedWeekScores(league);
     const pickedWeeks = new Set(picks.map((pick) => pick.week));
     const pickedTeams = new Set(picks.map((pick) => pick.pickerTeamId));
     const openWeek = [...new Set(scores.map((score) => score.week))].sort((a, b) => a - b).find((week) => !pickedWeeks.has(week));

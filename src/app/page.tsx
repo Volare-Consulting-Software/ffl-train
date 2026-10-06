@@ -13,5 +13,12 @@ export default async function Home({ searchParams }: HomeProps) {
   const date = typeof requestedDate === "string" && isIsoDate(requestedDate) ? requestedDate : upcomingFriday(new Date());
   const dashboard = await loadDashboard(date);
 
-  return <TripDashboard initialDate={date} initialSummaries={dashboard.summaries} suggestion={dashboard.suggestion} />;
+  return (
+    <TripDashboard
+      initialDate={date}
+      initialSummaries={dashboard.summaries}
+      suggestion={dashboard.suggestion}
+      tripOdds={dashboard.tripOdds}
+    />
+  );
 }

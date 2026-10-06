@@ -9,7 +9,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "FFL Train",
+  title: "Fantasy Football Train Ride",
   description: "Track the fantasy league last-place train trip destinations from Charlotte.",
 };
 

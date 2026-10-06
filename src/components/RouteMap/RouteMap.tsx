@@ -15,7 +15,6 @@ import type { TripSummary } from "@/types/tripSummary";
 const CHARLOTTE: LatLng = [35.2414, -80.8228];
 const INITIAL_ZOOM = 5;
 const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 /** Brand colors per theme. On dark, ECU Purple is only used as a fill, never as a line (volare-brand dark-theme.md). */
 const MAP_COLORS = {
@@ -39,8 +38,16 @@ export function RouteMap({ detail, summaries }: RouteMapProps) {
   const path = itinerary?.legs.flatMap((leg) => leg.path) ?? [];
 
   return (
-    <MapContainer center={CHARLOTTE} zoom={INITIAL_ZOOM} scrollWheelZoom worldCopyJump className={`h-full w-full map-monochrome-${theme}`}>
-      <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} maxZoom={19} />
+    <MapContainer
+      center={CHARLOTTE}
+      zoom={INITIAL_ZOOM}
+      scrollWheelZoom
+      worldCopyJump
+      // The required OpenStreetMap credit is shown in MapLegend under the map instead of over it.
+      attributionControl={false}
+      className={`h-full w-full map-monochrome-${theme}`}
+    >
+      <TileLayer url={TILE_URL} maxZoom={19} />
 
       {summaries
         .filter((summary) => summary.destination && summary.pick.id !== detail?.pick.id)

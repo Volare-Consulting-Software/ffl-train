@@ -1,9 +1,8 @@
-import type { TeamWeekScore } from "@/types/teamWeekScore";
+import type { LeagueSeason } from "@/types/leagueSeason";
 
-/** Read access to the fantasy league's results. */
+/** Read access to the fantasy league's teams and schedule. */
 export interface FantasyLeagueClient {
-  /** Scores for every team in every completed matchup week of a season. */
-  getCompletedWeekScores(season: number): Promise<TeamWeekScore[]>;
+  getSeason(season: number): Promise<LeagueSeason>;
 }
 
 export const FantasyLeagueClientToken = Symbol.for("FantasyLeagueClient");

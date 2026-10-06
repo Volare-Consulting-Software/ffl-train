@@ -9,10 +9,12 @@ import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
 import { MapLegend } from "@/components/MapLegend/MapLegend";
 import { NextPickerBanner } from "@/components/NextPickerBanner/NextPickerBanner";
+import { TripOddsTable } from "@/components/TripOddsTable/TripOddsTable";
 import { TripTable } from "@/components/TripTable/TripTable";
 import type { FlightPanelState } from "@/types/flightPanelState";
 import type { PickerSuggestion } from "@/types/pickerSuggestion";
 import type { TripDetail } from "@/types/tripDetail";
+import type { TripOddsReport } from "@/types/tripOddsReport";
 import type { TripSummary } from "@/types/tripSummary";
 
 const RouteMap = dynamic(() => import("@/components/RouteMap/RouteMap").then((module) => module.RouteMap), {
@@ -26,9 +28,10 @@ export interface TripDashboardProps {
   initialDate: string;
   initialSummaries: TripSummary[];
   suggestion: PickerSuggestion | null;
+  tripOdds: TripOddsReport | null;
 }
 
-export function TripDashboard({ initialDate, initialSummaries, suggestion }: TripDashboardProps) {
+export function TripDashboard({ initialDate, initialSummaries, suggestion, tripOdds }: TripDashboardProps) {
   const router = useRouter();
   const [date, setDate] = useState(initialDate);
   const [summaries, setSummaries] = useState(initialSummaries);
@@ -118,15 +121,15 @@ export function TripDashboard({ initialDate, initialSummaries, suggestion }: Tri
   const closeFlights = useCallback(() => setFlightDrawer(null), []);
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
+    <main className="flex w-full flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="flex items-start gap-3">
           <span className="mt-1 inline-flex size-10 items-center justify-center rounded-lg bg-brand text-on-brand">
             <TrainFront className="size-5" aria-hidden="true" />
           </span>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-fg">Last-place train ride</h1>
-            <p className="mt-1 text-fg-secondary">Every trip leaves Charlotte on the selected date. Pick a row to see its route.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-fg">Fantasy Football Train Ride</h1>
+            <p className="mt-1 text-fg-secondary">May allah have mercy on your soul...</p>
           </div>
         </div>
         <label className="flex flex-col gap-1 text-sm font-semibold text-fg">
@@ -143,7 +146,7 @@ export function TripDashboard({ initialDate, initialSummaries, suggestion }: Tri
       <NextPickerBanner suggestion={suggestion} />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <section aria-label="Picked destinations">
+        <section aria-label="Picked destinations" className="flex flex-col gap-6">
           <TripTable
             summaries={summaries}
             selectedPickId={selectedPickId}
@@ -151,9 +154,10 @@ export function TripDashboard({ initialDate, initialSummaries, suggestion }: Tri
             onSelect={setSelectedPickId}
             onAirportClick={(summary) => void openFlights(summary)}
           />
+          {tripOdds && <TripOddsTable report={tripOdds} />}
         </section>
         <section aria-label="Route map" className="flex flex-col gap-3">
-          <div className="h-[28rem] overflow-hidden rounded-lg border border-line">
+          <div className="h-[32rem] overflow-hidden rounded-lg border border-line">
             <RouteMap detail={detail} summaries={summaries} />
           </div>
           <MapLegend />
