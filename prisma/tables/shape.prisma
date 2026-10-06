@@ -1,0 +1,6 @@
+model Shape {
+  id     String @id
+  points Json
+
+  @@map("shapes")
+}

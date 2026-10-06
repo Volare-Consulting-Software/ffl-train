@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+/* Volare brand tokens (volare-brand/colors/palette.md, dark-theme.md). */
+:root {
+  --brand-primary: #5e27d2;
+  --brand-primary-hover: #4e1fb0;
+  --brand-primary-pressed: #3f1990;
+  --brand-primary-subtle: #efe9fb;
+  --brand-primary-on: #ffffff;
+
+  --surface-base: #ffffff;
+  --surface-raised: #f8f7fa;
+  --surface-sunken: #f1f0f4;
+  --surface-overlay: #ffffff;
+  --surface-selected: var(--brand-primary-subtle);
+
+  --text-primary: #1a1625;
+  --text-body: #3d3852;
+  --text-secondary: #6e6982;
+  --text-muted: #9c97aa;
+  --text-on-brand: var(--brand-primary-on);
+  --text-link: var(--brand-primary);
+
+  --border-default: #e4e2ea;
+  --border-strong: #c9c5d2;
+
+  --color-success: #1f8a4c;
+  --color-warning: #b86e00;
+  --color-error: #c8312d;
+  --color-info: #1e6fb8;
+
+  --scrim-drawer: rgba(14, 11, 23, 0.3);
+  --shadow-overlay: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-base: #0e0b17;
+    --surface-raised: #26212f;
+    --surface-sunken: #1a1625;
+    --surface-overlay: #332c41;
+    /* ECU Purple stays a fill on dark: a low-opacity tint, never a new purple. */
+    --surface-selected: rgba(94, 39, 210, 0.28);
+
+    --text-primary: #f1f0f4;
+    --text-body: #f1f0f4;
+    --text-secondary: #c9c5d2;
+    --text-muted: #9c97aa;
+    --text-on-brand: #f1f0f4;
+    --text-link: #f1f0f4;
+
+    --border-default: #4a4257;
+    --border-strong: #6e6982;
+
+    --color-success: #4fc987;
+    --color-warning: #e0a341;
+    --color-error: #f06664;
+    --color-info: #6ba8e5;
+
+    --shadow-overlay: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-nunito), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-brand: var(--brand-primary);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-brand-pressed: var(--brand-primary-pressed);
+  --color-brand-subtle: var(--brand-primary-subtle);
+  --color-on-brand: var(--text-on-brand);
+
+  --color-surface: var(--surface-base);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-selected: var(--surface-selected);
+
+  --color-fg: var(--text-primary);
+  --color-fg-body: var(--text-body);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-muted: var(--text-muted);
+  --color-link: var(--text-link);
+
+  --color-line: var(--border-default);
+  --color-line-strong: var(--border-strong);
+
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
+}
+
+body {
+  background: var(--surface-base);
+  color: var(--text-body);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :focus-visible {
+    outline-color: var(--text-primary);
+  }
+}
+
+/* Leaflet popups and tooltips follow the brand surfaces and type. */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--surface-sunken);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip,
+.leaflet-tooltip {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-overlay);
+}
+
+.leaflet-tooltip {
+  border-color: var(--border-default);
+}
+
+.leaflet-bar a {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.leaflet-bar a:hover {
+  background: var(--surface-raised);
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.drawer-panel {
+  animation: drawer-in 200ms ease-out;
+}
+
+.drawer-scrim {
+  background: var(--scrim-drawer);
+  animation: scrim-in 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel,
+  .drawer-scrim {
+    animation: none;
+  }
+}
+
+/* Monochrome basemap: grayscale OpenStreetMap tiles so the route is the only color on the map. */
+.map-monochrome-light .leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.85) brightness(1.08);
+}
+
+.map-monochrome-dark .leaflet-tile-pane {
+  filter: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
+}

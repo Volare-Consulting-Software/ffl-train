@@ -1,0 +1,7 @@
+model TrainRoute {
+  id    String @id
+  name  String
+  trips Trip[]
+
+  @@map("train_routes")
+}

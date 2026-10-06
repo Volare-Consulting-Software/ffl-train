@@ -1,0 +1,14 @@
+model FlightQuote {
+  id                  Int      @id @default(autoincrement())
+  airportCode         String
+  flightDate          DateTime @db.Date
+  priceUsd            Int?
+  connections         Int?
+  durationMinutes     Int?
+  flightDistanceMiles Float
+  fetchedAt           DateTime @default(now())
+  raw                 Json
+
+  @@unique([airportCode, flightDate])
+  @@map("flight_quotes")
+}

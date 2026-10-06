@@ -1,0 +1,11 @@
+model Airport {
+  code         String @id
+  name         String
+  municipality String
+  region       String
+  country      String
+  latitude     Float
+  longitude    Float
+
+  @@map("airports")
+}

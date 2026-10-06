@@ -1,0 +1,14 @@
+model Pick {
+  id              Int      @id @default(autoincrement())
+  season          Int
+  week            Int
+  pickerTeamId    Int
+  pickerName      String
+  stationCode     String
+  destinationName String
+  createdAt       DateTime @default(now())
+
+  @@unique([season, week])
+  @@unique([season, pickerTeamId])
+  @@map("picks")
+}

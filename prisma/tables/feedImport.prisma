@@ -1,0 +1,8 @@
+model FeedImport {
+  id         Int      @id @default(autoincrement())
+  source     String
+  rowCount   Int
+  importedAt DateTime @default(now())
+
+  @@map("feed_imports")
+}

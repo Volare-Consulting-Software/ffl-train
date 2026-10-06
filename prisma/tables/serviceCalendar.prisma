@@ -1,0 +1,8 @@
+model ServiceCalendar {
+  serviceId String   @id
+  weekdays  Int
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+
+  @@map("service_calendars")
+}
