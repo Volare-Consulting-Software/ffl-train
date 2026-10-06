@@ -11,9 +11,8 @@ const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 /** Each person's chance of riding the train, as the ultimate loser or as the wheel's pick. */
 export function TripOddsTable({ report }: TripOddsTableProps) {
-  const teamCount = report.teams.length;
   const highest = Math.max(...report.teams.map((team) => team.tripProbability), 0.0001);
-  const bracketCutoff = teamCount - LOSER_BRACKET_SIZE;
+  const bracketCutoff = report.teams.length - LOSER_BRACKET_SIZE;
 
   return (
     <section aria-labelledby="trip-odds-title" className="flex flex-col gap-3">
@@ -69,12 +68,6 @@ export function TripOddsTable({ report }: TripOddsTableProps) {
         </table>
       </div>
 
-      <p className="text-xs text-fg-muted">
-        Based on {report.simulations.toLocaleString()} simulated seasons ({report.remainingGames} regular-season games left).
-        Each run plays out the remaining schedule from each team&apos;s points-for average, then the loser bracket: 7th vs 10th
-        and 8th vs 9th, with 11th and 12th waiting on the round 1 losers. The last-place finisher rides, plus one of the other{" "}
-        {teamCount - 1} people picked by the wheel, so the trip column adds up to 200%.
-      </p>
     </section>
   );
 }
