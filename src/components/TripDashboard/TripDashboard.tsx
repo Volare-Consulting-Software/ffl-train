@@ -153,7 +153,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
         </section>
         <section aria-label="Route map" className="flex flex-col gap-3">
           <div className="h-[32rem] overflow-hidden rounded-lg border border-line">
-            <RouteMap detail={detail} summaries={summaries} />
+            <RouteMap detail={detail} />
           </div>
           <MapLegend />
           {detailError && <p className="text-sm text-error">{detailError}</p>}
