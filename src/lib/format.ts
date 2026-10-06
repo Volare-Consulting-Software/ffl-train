@@ -31,3 +31,14 @@ export function formatIsoDate(isoDate: string): string {
 export function formatUsd(amount: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
 }
+
+/** Formats a SerpApi local time (`YYYY-MM-DD HH:MM`) as `7:15 AM`. */
+export function formatClockTime(localDateTime: string): string {
+  const match = /(\d{2}):(\d{2})$/.exec(localDateTime);
+  if (!match) {
+    return localDateTime;
+  }
+  const hours = Number(match[1]);
+  const suffix = hours >= 12 ? "PM" : "AM";
+  return `${hours % 12 || 12}:${match[2]} ${suffix}`;
+}

@@ -33,6 +33,6 @@ export class LeaguePickerSuggester implements PickerSuggester {
     if (!top) {
       return null;
     }
-    return { season, week: openWeek, teamId: top.teamId, teamName: top.teamName, points: top.points };
+    return { season, week: openWeek, teamId: top.teamId, ownerName: top.ownerName, points: top.points };
   }
 }

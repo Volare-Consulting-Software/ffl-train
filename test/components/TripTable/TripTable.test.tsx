@@ -35,7 +35,7 @@ describe("TripTable", () => {
     const onAirportClick = vi.fn();
     render(<TripTable summaries={[SUMMARY]} selectedPickId={null} loading={false} onSelect={onSelect} onAirportClick={onAirportClick} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "ORD" }));
+    await userEvent.click(screen.getByRole("button", { name: "ORD fares to Charlotte" }));
 
     expect(onAirportClick).toHaveBeenCalledWith(SUMMARY);
     expect(onSelect).not.toHaveBeenCalled();

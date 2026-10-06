@@ -38,7 +38,7 @@ export class CachedFlightQuoteService implements FlightQuoteService {
     if (cached) {
       return { status: "ok", quote: cached };
     }
-    const decision = await this.dateRateLimiter.consume(clientId, departureDate);
+    const decision = await this.dateRateLimiter.check(clientId, departureDate);
     if (!decision.allowed) {
       return { status: "rate-limited" };
     }
@@ -49,6 +49,9 @@ export class CachedFlightQuoteService implements FlightQuoteService {
     }
     const distance = Math.round(haversineMiles(trip.airport.latitude, trip.airport.longitude, home.latitude, home.longitude));
     const result = await this.flightSearchClient.searchOneWay(trip.airport.code, HOME_AIRPORT_CODE, flightDate);
-    return { status: "ok", quote: await this.flightQuoteRepository.save(trip.airport.code, flightDate, distance, result) };
+    const quote = await this.flightQuoteRepository.save(trip.airport.code, flightDate, distance, result);
+    // Count the date only once a paid search has succeeded, so failed lookups don't use up the allowance.
+    await this.dateRateLimiter.consume(clientId, departureDate);
+    return { status: "ok", quote };
   }
 }

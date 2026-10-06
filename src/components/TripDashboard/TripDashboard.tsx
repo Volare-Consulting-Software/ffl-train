@@ -1,13 +1,14 @@
 "use client";
 
+import { TrainFront } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import { FlightPanel } from "@/components/FlightPanel/FlightPanel";
+import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
+import { MapLegend } from "@/components/MapLegend/MapLegend";
 import { NextPickerBanner } from "@/components/NextPickerBanner/NextPickerBanner";
-import { SelectedDateChips } from "@/components/SelectedDateChips/SelectedDateChips";
 import { TripTable } from "@/components/TripTable/TripTable";
 import type { FlightPanelState } from "@/types/flightPanelState";
 import type { PickerSuggestion } from "@/types/pickerSuggestion";
@@ -16,7 +17,7 @@ import type { TripSummary } from "@/types/tripSummary";
 
 const RouteMap = dynamic(() => import("@/components/RouteMap/RouteMap").then((module) => module.RouteMap), {
   ssr: false,
-  loading: () => <div className="h-full w-full animate-pulse rounded-lg bg-neutral-200 dark:bg-neutral-800" />,
+  loading: () => <div className="h-full w-full animate-pulse bg-surface-sunken" />,
 });
 
 const LIMIT_PAGE = "/limit-max";
@@ -24,11 +25,10 @@ const LIMIT_PAGE = "/limit-max";
 export interface TripDashboardProps {
   initialDate: string;
   initialSummaries: TripSummary[];
-  selectedDates: string[];
   suggestion: PickerSuggestion | null;
 }
 
-export function TripDashboard({ initialDate, initialSummaries, selectedDates, suggestion }: TripDashboardProps) {
+export function TripDashboard({ initialDate, initialSummaries, suggestion }: TripDashboardProps) {
   const router = useRouter();
   const [date, setDate] = useState(initialDate);
   const [summaries, setSummaries] = useState(initialSummaries);
@@ -36,7 +36,7 @@ export function TripDashboard({ initialDate, initialSummaries, selectedDates, su
   const [selectedPickId, setSelectedPickId] = useState<number | null>(initialSummaries[0]?.pick.id ?? null);
   const [detail, setDetail] = useState<TripDetail | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
-  const [flightPanel, setFlightPanel] = useState<FlightPanelState | null>(null);
+  const [flightDrawer, setFlightDrawer] = useState<FlightPanelState | null>(null);
 
   useEffect(() => {
     if (selectedPickId === null) {
@@ -74,7 +74,7 @@ export function TripDashboard({ initialDate, initialSummaries, selectedDates, su
         return;
       }
       setDate(nextDate);
-      setFlightPanel(null);
+      setFlightDrawer(null);
       setLoadingTrips(true);
       window.history.replaceState(null, "", `/?date=${nextDate}`);
       try {
@@ -89,71 +89,80 @@ export function TripDashboard({ initialDate, initialSummaries, selectedDates, su
     [date, router],
   );
 
-  const showFlight = useCallback(
+  const openFlights = useCallback(
     async (summary: TripSummary) => {
       if (!summary.airport) {
         return;
       }
-      setFlightPanel({ airport: summary.airport, pickId: summary.pick.id, status: "loading" });
-      const response = await fetch(`/api/flights?pickId=${summary.pick.id}&date=${date}`);
-      if (response.status === 429) {
-        router.push(LIMIT_PAGE);
-        return;
+      const base = { airport: summary.airport, pickId: summary.pick.id };
+      setFlightDrawer({ ...base, status: "loading" });
+      try {
+        const response = await fetch(`/api/flights?pickId=${summary.pick.id}&date=${date}`);
+        if (response.status === 429) {
+          router.push(LIMIT_PAGE);
+          return;
+        }
+        const body = await response.json();
+        setFlightDrawer(
+          response.ok
+            ? { ...base, status: "ready", quote: body }
+            : { ...base, status: "error", message: body.error ?? "Flight lookup failed" },
+        );
+      } catch {
+        setFlightDrawer({ ...base, status: "error", message: "Flight lookup failed. Try again in a moment." });
       }
-      const body = await response.json();
-      setFlightPanel(
-        response.ok
-          ? { airport: summary.airport, pickId: summary.pick.id, status: "ready", quote: body }
-          : { airport: summary.airport, pickId: summary.pick.id, status: "error", message: body.error ?? "Flight lookup failed" },
-      );
     },
     [date, router],
   );
 
+  const closeFlights = useCallback(() => setFlightDrawer(null), []);
+
   return (
-    <main className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Last-place train ride</h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Every trip leaves Charlotte (CLT) on the selected date. Pick a row to see its route.
-          </p>
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8">
+      <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex items-start gap-3">
+          <span className="mt-1 inline-flex size-10 items-center justify-center rounded-lg bg-brand text-on-brand">
+            <TrainFront className="size-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-fg">Last-place train ride</h1>
+            <p className="mt-1 text-fg-secondary">Every trip leaves Charlotte on the selected date. Pick a row to see its route.</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-2 md:items-end">
-          <label className="flex items-center gap-2 text-sm font-medium">
-            Departure date
-            <input
-              type="date"
-              value={date}
-              onChange={(event) => void changeDate(event.target.value)}
-              className="rounded-md border border-neutral-300 bg-white px-2 py-1 dark:border-neutral-700 dark:bg-neutral-900"
-            />
-          </label>
-          <SelectedDateChips dates={selectedDates} activeDate={date} onSelect={(chosen) => void changeDate(chosen)} />
-        </div>
+        <label className="flex flex-col gap-1 text-sm font-semibold text-fg">
+          Departure date
+          <input
+            type="date"
+            value={date}
+            onChange={(event) => void changeDate(event.target.value)}
+            className="h-10 rounded-lg border border-line bg-surface-sunken px-3 font-normal text-fg focus-visible:border-brand"
+          />
+        </label>
       </header>
 
       <NextPickerBanner suggestion={suggestion} />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <section className="flex flex-col gap-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <section aria-label="Picked destinations">
           <TripTable
             summaries={summaries}
             selectedPickId={selectedPickId}
             loading={loadingTrips}
             onSelect={setSelectedPickId}
-            onAirportClick={(summary) => void showFlight(summary)}
+            onAirportClick={(summary) => void openFlights(summary)}
           />
-          {flightPanel && <FlightPanel state={flightPanel} onClose={() => setFlightPanel(null)} />}
         </section>
-        <section className="flex flex-col gap-4">
-          <div className="h-[28rem] overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+        <section aria-label="Route map" className="flex flex-col gap-3">
+          <div className="h-[28rem] overflow-hidden rounded-lg border border-line">
             <RouteMap detail={detail} summaries={summaries} />
           </div>
-          {detailError && <p className="text-sm text-red-700 dark:text-red-400">{detailError}</p>}
+          <MapLegend />
+          {detailError && <p className="text-sm text-error">{detailError}</p>}
           {detail && <ItineraryDetails detail={detail} />}
         </section>
       </div>
+
+      <FlightDrawer state={flightDrawer} onClose={closeFlights} />
     </main>
   );
 }

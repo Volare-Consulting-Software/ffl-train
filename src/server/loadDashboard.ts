@@ -7,12 +7,11 @@ import type { PickerSuggestion } from "@/types/pickerSuggestion";
 
 /** Server boundary that resolves services and gathers everything the home page needs for a date. */
 export async function loadDashboard(departureDate: string): Promise<DashboardData> {
-  const [summaries, selectedDates, suggestion] = await Promise.all([
+  const [summaries, suggestion] = await Promise.all([
     container.resolve<TripService>(TripServiceToken).listSummaries(departureDate),
-    loadSelectedDates(),
     loadSuggestion(),
   ]);
-  return { summaries, selectedDates, suggestion };
+  return { summaries, suggestion };
 }
 
 /** Every departure date someone has already paid to look up, newest first. */

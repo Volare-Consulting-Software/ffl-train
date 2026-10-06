@@ -8,7 +8,7 @@ import type { TeamWeekScore } from "@/types/teamWeekScore";
 
 const SEASON = 2026;
 
-const score = (week: number, teamId: number, points: number): TeamWeekScore => ({ week, teamId, teamName: `Team ${teamId}`, points });
+const score = (week: number, teamId: number, points: number): TeamWeekScore => ({ week, teamId, ownerName: `Team ${teamId}`, points });
 const pick = (week: number, pickerTeamId: number): Pick => ({
   id: week,
   season: SEASON,
@@ -29,7 +29,7 @@ describe("suggest", () => {
   it("suggest_firstWeek_returnsTopScorer", async () => {
     const result = await suggester([score(1, 1, 101), score(1, 2, 140.5), score(1, 3, 99)], []).suggest(SEASON);
 
-    expect(result).toEqual({ season: SEASON, week: 1, teamId: 2, teamName: "Team 2", points: 140.5 });
+    expect(result).toEqual({ season: SEASON, week: 1, teamId: 2, ownerName: "Team 2", points: 140.5 });
   });
 
   it("suggest_topScorerAlreadyPicked_returnsNextBestScorer", async () => {

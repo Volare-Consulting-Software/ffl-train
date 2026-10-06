@@ -1,3 +1,5 @@
+import { Trophy } from "lucide-react";
+
 import type { PickerSuggestion } from "@/types/pickerSuggestion";
 
 export interface NextPickerBannerProps {
@@ -9,9 +11,12 @@ export function NextPickerBanner({ suggestion }: NextPickerBannerProps) {
     return null;
   }
   return (
-    <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm dark:border-amber-700 dark:bg-amber-950">
-      Week {suggestion.week} pick goes to <strong>{suggestion.teamName}</strong> ({suggestion.points.toFixed(2)} pts), the top
-      scorer who hasn&apos;t picked yet.
+    <div className="flex items-center gap-3 rounded-lg bg-surface-selected px-4 py-3 text-sm text-fg">
+      <Trophy className="size-5 shrink-0" aria-hidden="true" />
+      <p>
+        <strong className="font-bold">{suggestion.ownerName}</strong> picks next, with {suggestion.points.toFixed(2)} points
+        in week {suggestion.week}.
+      </p>
     </div>
   );
 }

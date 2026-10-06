@@ -11,13 +11,13 @@ import { isEasternOrCentral } from "@/lib/timeZones";
 import { ORIGIN_STATION_CODE } from "@/logic/TrainTripService";
 
 const REACHABILITY_DAYS = 7;
-const USAGE = `Usage: npm run pick:add -- --station <CODE> [--week <n>] [--season <year>] [--team-id <id> --picker "<team name>"] [--name "<display name>"]
+const USAGE = `Usage: npm run pick:add -- --station <CODE> [--week <n>] [--season <year>] [--team-id <id> --picker "<name>"] [--name "<display name>"]
 
   --station   Amtrak station code, e.g. CHI (required)
   --week      Fantasy week the pick is for (defaults to the suggested week from ESPN)
   --season    Season year (defaults to ESPN_SEASON)
   --team-id   ESPN team id of the picker (defaults to the ESPN suggestion; requires --picker)
-  --picker    Team name of the picker (defaults to the ESPN suggestion)
+  --picker    Name of the person picking (defaults to the ESPN suggestion)
   --name      Destination display name (defaults to the station name)`;
 
 async function main(): Promise<void> {
@@ -50,7 +50,7 @@ async function main(): Promise<void> {
   const picker = await resolvePicker(season, values);
   const picks = await container.resolve<PickRepository>(PickRepositoryToken).listForSeason(season);
   if (picks.some((pick) => pick.pickerTeamId === picker.teamId)) {
-    throw new Error(`${picker.teamName} already picked this season.`);
+    throw new Error(`${picker.ownerName} already picked this season.`);
   }
   if (picks.some((pick) => pick.week === picker.week)) {
     throw new Error(`Week ${picker.week} of ${season} already has a pick.`);
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
     season,
     week: picker.week,
     pickerTeamId: picker.teamId,
-    pickerName: picker.teamName,
+    pickerName: picker.ownerName,
     stationCode,
     destinationName: values.name ?? station.name.replace(/ Amtrak Station$/i, ""),
   });
@@ -81,9 +81,9 @@ async function assertReachable(stationCode: string): Promise<void> {
 async function resolvePicker(
   season: number,
   values: { week?: string; "team-id"?: string; picker?: string },
-): Promise<{ week: number; teamId: number; teamName: string }> {
+): Promise<{ week: number; teamId: number; ownerName: string }> {
   if (values["team-id"] && values.picker && values.week) {
-    return { week: Number(values.week), teamId: Number(values["team-id"]), teamName: values.picker };
+    return { week: Number(values.week), teamId: Number(values["team-id"]), ownerName: values.picker };
   }
   const suggestion = await container.resolve<PickerSuggester>(PickerSuggesterToken).suggest(season);
   if (!suggestion) {
@@ -92,7 +92,7 @@ async function resolvePicker(
   if (values.week && Number(values.week) !== suggestion.week) {
     throw new Error(`The next open week is ${suggestion.week}, not ${values.week}. Pass --team-id and --picker to override.`);
   }
-  return { week: suggestion.week, teamId: suggestion.teamId, teamName: suggestion.teamName };
+  return { week: suggestion.week, teamId: suggestion.teamId, ownerName: suggestion.ownerName };
 }
 
 main()

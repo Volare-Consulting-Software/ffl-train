@@ -2,18 +2,33 @@ import { injectable } from "tsyringe";
 
 import type { FlightSearchClient } from "@/interfaces/flightSearchClient";
 import type { FlightSearchResult } from "@/types/flightSearchResult";
+import type { FlightSegment } from "@/types/flightSegment";
 
 const SERPAPI_URL = "https://serpapi.com/search.json";
 const ONE_WAY = "2";
 
+interface SerpApiAirportTime {
+  id?: string;
+  time?: string;
+}
+
+interface SerpApiFlight {
+  airline?: string;
+  flight_number?: string;
+  duration?: number;
+  departure_airport?: SerpApiAirportTime;
+  arrival_airport?: SerpApiAirportTime;
+}
+
 interface SerpApiItinerary {
-  flights?: unknown[];
+  flights?: SerpApiFlight[];
   total_duration?: number;
   price?: number;
 }
 
 interface SerpApiResponse {
   error?: string;
+  search_metadata?: { google_flights_url?: string };
   best_flights?: SerpApiItinerary[];
   other_flights?: SerpApiItinerary[];
 }
@@ -48,6 +63,7 @@ export class SerpApiFlightSearchClient implements FlightSearchClient {
 
 /** Picks the cheapest priced itinerary across best and other flights. An empty search is a valid "no flights" result. */
 export function toSearchResult(body: SerpApiResponse): FlightSearchResult {
+  const googleFlightsUrl = body.search_metadata?.google_flights_url ?? null;
   const itineraries = [...(body.best_flights ?? []), ...(body.other_flights ?? [])].filter(
     (itinerary) => typeof itinerary.price === "number",
   );
@@ -56,12 +72,26 @@ export function toSearchResult(body: SerpApiResponse): FlightSearchResult {
     null,
   );
   if (!cheapest) {
-    return { priceUsd: null, connections: null, durationMinutes: null, raw: body };
+    return { priceUsd: null, connections: null, durationMinutes: null, segments: [], googleFlightsUrl, raw: body };
   }
   return {
     priceUsd: cheapest.price!,
     connections: Math.max((cheapest.flights?.length ?? 1) - 1, 0),
     durationMinutes: cheapest.total_duration ?? null,
+    segments: (cheapest.flights ?? []).map(toSegment),
+    googleFlightsUrl,
     raw: { best_flights: body.best_flights ?? [], other_flights: body.other_flights ?? [] },
+  };
+}
+
+function toSegment(flight: SerpApiFlight): FlightSegment {
+  return {
+    airline: flight.airline ?? "",
+    flightNumber: flight.flight_number ?? "",
+    departureAirport: flight.departure_airport?.id ?? "",
+    departureTime: flight.departure_airport?.time ?? "",
+    arrivalAirport: flight.arrival_airport?.id ?? "",
+    arrivalTime: flight.arrival_airport?.time ?? "",
+    durationMinutes: flight.duration ?? null,
   };
 }

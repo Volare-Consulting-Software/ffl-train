@@ -3,6 +3,6 @@ export interface PickerSuggestion {
   season: number;
   week: number;
   teamId: number;
-  teamName: string;
+  ownerName: string;
   points: number;
 }

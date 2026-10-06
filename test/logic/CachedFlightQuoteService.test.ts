@@ -46,6 +46,8 @@ const CACHED: FlightQuote = {
   connections: 0,
   durationMinutes: 115,
   flightDistanceMiles: 599,
+  segments: [],
+  googleFlightsUrl: null,
   fetchedAt: "2026-10-06T12:00:00.000Z",
 };
 
@@ -59,10 +61,12 @@ function buildService(options: { cached: FlightQuote | null; allowed: boolean })
     );
   const searchClient = new Mock<FlightSearchClient>()
     .setup((client) => client.searchOneWay(It.IsAny(), It.IsAny(), It.IsAny()))
-    .returnsAsync({ priceUsd: 240, connections: 1, durationMinutes: 200, raw: {} });
+    .returnsAsync({ priceUsd: 240, connections: 1, durationMinutes: 200, segments: [], googleFlightsUrl: null, raw: {} });
   const rateLimiter = new Mock<DateRateLimiter>()
+    .setup((limiter) => limiter.check(CLIENT, DEPARTURE_DATE))
+    .returnsAsync({ allowed: options.allowed, datesUsedThisWeek: 1, limit: 3 })
     .setup((limiter) => limiter.consume(CLIENT, DEPARTURE_DATE))
-    .returnsAsync({ allowed: options.allowed, datesUsedThisWeek: 1, limit: 3 });
+    .returnsAsync({ allowed: options.allowed, datesUsedThisWeek: 2, limit: 3 });
   const tripService = new Mock<TripService>().setup((service) => service.getDetail(PICK_ID, DEPARTURE_DATE)).returnsAsync(TRIP);
   const airportLocator = new Mock<AirportLocator>().setup((locator) => locator.findByCode("CLT")).returnsAsync(CLT);
 
@@ -82,16 +86,25 @@ describe("quoteForTrip", () => {
 
     expect(await service.quoteForTrip(PICK_ID, DEPARTURE_DATE, CLIENT)).toEqual({ status: "ok", quote: CACHED });
     searchClient.verify((client) => client.searchOneWay(It.IsAny(), It.IsAny(), It.IsAny()), Times.Never());
-    rateLimiter.verify((limiter) => limiter.consume(It.IsAny(), It.IsAny()), Times.Never());
+    rateLimiter.verify((limiter) => limiter.check(It.IsAny(), It.IsAny()), Times.Never());
   });
 
   it("quoteForTrip_cacheMissWithinLimit_searchesArrivalDateAndStores", async () => {
-    const { service, searchClient } = buildService({ cached: null, allowed: true });
+    const { service, searchClient, rateLimiter } = buildService({ cached: null, allowed: true });
 
     const result = await service.quoteForTrip(PICK_ID, DEPARTURE_DATE, CLIENT);
 
     expect(result).toEqual({ status: "ok", quote: expect.objectContaining({ priceUsd: 240, flightDistanceMiles: 600 }) });
     searchClient.verify((client) => client.searchOneWay("ORD", "CLT", "2026-10-10"), Times.Once());
+    rateLimiter.verify((limiter) => limiter.consume(CLIENT, DEPARTURE_DATE), Times.Once());
+  });
+
+  it("quoteForTrip_paidSearchFails_doesNotCountDateAgainstLimit", async () => {
+    const { service, searchClient, rateLimiter } = buildService({ cached: null, allowed: true });
+    searchClient.setup((client) => client.searchOneWay(It.IsAny(), It.IsAny(), It.IsAny())).throwsAsync(new Error("SERPAPI_KEY is not set"));
+
+    await expect(service.quoteForTrip(PICK_ID, DEPARTURE_DATE, CLIENT)).rejects.toThrow("SERPAPI_KEY is not set");
+    rateLimiter.verify((limiter) => limiter.consume(It.IsAny(), It.IsAny()), Times.Never());
   });
 
   it("quoteForTrip_cacheMissOverLimit_returnsRateLimitedWithoutSearching", async () => {

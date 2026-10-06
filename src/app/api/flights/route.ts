@@ -12,7 +12,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "pickId must be a number and date must be YYYY-MM-DD" }, { status: 400 });
   }
   const flightQuoteService = container.resolve<FlightQuoteService>(FlightQuoteServiceToken);
-  const result = await flightQuoteService.quoteForTrip(pickId.data, date.data, clientIdFrom(request.headers));
+  let result;
+  try {
+    result = await flightQuoteService.quoteForTrip(pickId.data, date.data, clientIdFrom(request.headers));
+  } catch (err) {
+    console.warn(`Flight lookup failed: ${err instanceof Error ? err.message : String(err)}`);
+    return NextResponse.json({ error: "Fares are unavailable right now." }, { status: 502 });
+  }
   switch (result.status) {
     case "ok":
       return NextResponse.json(result.quote);
