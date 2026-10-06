@@ -1,6 +1,7 @@
 import { injectable } from "tsyringe";
 
 import type { FlightSearchClient } from "@/interfaces/flightSearchClient";
+import type { FlightItinerary } from "@/types/flightItinerary";
 import type { FlightSearchResult } from "@/types/flightSearchResult";
 import type { FlightSegment } from "@/types/flightSegment";
 
@@ -61,25 +62,19 @@ export class SerpApiFlightSearchClient implements FlightSearchClient {
   }
 }
 
-/** Picks the cheapest priced itinerary across best and other flights. An empty search is a valid "no flights" result. */
+/** Maps every priced fare in best and other flights, cheapest first. An empty search is a valid "no flights" result. */
 export function toSearchResult(body: SerpApiResponse): FlightSearchResult {
-  const googleFlightsUrl = body.search_metadata?.google_flights_url ?? null;
-  const itineraries = [...(body.best_flights ?? []), ...(body.other_flights ?? [])].filter(
-    (itinerary) => typeof itinerary.price === "number",
-  );
-  const cheapest = itineraries.reduce<SerpApiItinerary | null>(
-    (best, itinerary) => (best === null || itinerary.price! < best.price! ? itinerary : best),
-    null,
-  );
-  if (!cheapest) {
-    return { priceUsd: null, connections: null, durationMinutes: null, segments: [], googleFlightsUrl, raw: body };
-  }
+  const itineraries: FlightItinerary[] = [...(body.best_flights ?? []), ...(body.other_flights ?? [])]
+    .filter((itinerary) => typeof itinerary.price === "number")
+    .map((itinerary) => ({
+      priceUsd: itinerary.price!,
+      durationMinutes: itinerary.total_duration ?? null,
+      segments: (itinerary.flights ?? []).map(toSegment),
+    }))
+    .sort((a, b) => a.priceUsd - b.priceUsd);
   return {
-    priceUsd: cheapest.price!,
-    connections: Math.max((cheapest.flights?.length ?? 1) - 1, 0),
-    durationMinutes: cheapest.total_duration ?? null,
-    segments: (cheapest.flights ?? []).map(toSegment),
-    googleFlightsUrl,
+    itineraries,
+    googleFlightsUrl: body.search_metadata?.google_flights_url ?? null,
     raw: { best_flights: body.best_flights ?? [], other_flights: body.other_flights ?? [] },
   };
 }

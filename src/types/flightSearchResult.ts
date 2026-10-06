@@ -1,11 +1,8 @@
-import type { FlightSegment } from "@/types/flightSegment";
+import type { FlightItinerary } from "@/types/flightItinerary";
 
-/** The cheapest itinerary from a live fare search, plus the raw payload for auditing. */
+/** Every priced fare from a live search, plus the raw payload for auditing. */
 export interface FlightSearchResult {
-  priceUsd: number | null;
-  connections: number | null;
-  durationMinutes: number | null;
-  segments: FlightSegment[];
+  itineraries: FlightItinerary[];
   googleFlightsUrl: string | null;
   raw: unknown;
 }

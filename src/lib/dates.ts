@@ -64,3 +64,18 @@ export function weekStart(now: Date): string {
   const today = dateInZone(now, LEAGUE_TIME_ZONE);
   return addDays(today, -mondayBasedWeekday(today));
 }
+
+/** An instant as local wall-clock time in a time zone, formatted `YYYY-MM-DD HH:MM` to compare with airline times. */
+export function localDateTime(instant: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const part = (type: string) => parts.find((entry) => entry.type === type)?.value ?? "00";
+  return `${part("year")}-${part("month")}-${part("day")} ${part("hour")}:${part("minute")}`;
+}

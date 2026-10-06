@@ -21,6 +21,7 @@ const READY: FlightPanelState = {
       { airline: "Delta", flightNumber: "DL 1", departureAirport: "MSY", departureTime: "2026-10-10 06:00", arrivalAirport: "ATL", arrivalTime: "2026-10-10 08:40", durationMinutes: 100 },
     ],
     googleFlightsUrl: "https://www.google.com/travel/flights?q=MSY-CLT",
+    earliestDeparture: "2026-10-09 23:12",
     fetchedAt: "2026-10-06T12:00:00.000Z",
   },
 };

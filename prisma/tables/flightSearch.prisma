@@ -1,14 +1,13 @@
-model FlightQuote {
+model FlightSearch {
   id                  Int      @id @default(autoincrement())
   airportCode         String
   flightDate          DateTime @db.Date
-  priceUsd            Int?
-  connections         Int?
-  durationMinutes     Int?
   flightDistanceMiles Float
-  fetchedAt           DateTime @default(now())
+  itineraries         Json
+  googleFlightsUrl    String?
   raw                 Json
+  fetchedAt           DateTime @default(now())
 
   @@unique([airportCode, flightDate])
-  @@map("flight_quotes")
+  @@map("flight_searches")
 }

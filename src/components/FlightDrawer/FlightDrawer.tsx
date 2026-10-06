@@ -127,7 +127,11 @@ export function FlightDrawer({ state, onClose }: FlightDrawerProps) {
 
 function FareDetails({ quote }: { quote: FlightQuote }) {
   if (quote.priceUsd === null) {
-    return <p>No fares found for {formatIsoDate(quote.flightDate)}.</p>;
+    return (
+      <p>
+        No flights leave at least 2 hours after the train gets in, through {formatIsoDate(quote.flightDate)}.
+      </p>
+    );
   }
 
   return (
@@ -135,7 +139,9 @@ function FareDetails({ quote }: { quote: FlightQuote }) {
       <div>
         <p className="text-sm font-medium text-fg-secondary">Cheapest one-way</p>
         <p className="text-5xl font-extrabold tracking-tight text-fg">{formatUsd(quote.priceUsd)}</p>
-        <p className="mt-1 text-sm text-fg-secondary">Flying {formatIsoDate(quote.flightDate)}, the day the train arrives</p>
+        <p className="mt-1 text-sm text-fg-secondary">
+          Flying {formatIsoDate(quote.flightDate)}, at least 2 hours after the train gets in
+        </p>
       </div>
 
       <dl className="grid grid-cols-3 gap-4 rounded-lg bg-surface-raised p-4">
