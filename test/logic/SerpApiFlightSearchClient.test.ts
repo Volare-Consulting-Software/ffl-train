@@ -1,4 +1,5 @@
-import { toSearchResult } from "@/logic/SerpApiFlightSearchClient";
+import { FlightSearchUnavailableError } from "@/logic/FlightSearchUnavailableError";
+import { parseSerpApiResponse, toSearchResult } from "@/logic/SerpApiFlightSearchClient";
 
 const segment = (flightNumber: string, from: string, to: string) => ({
   airline: "American",
@@ -26,5 +27,23 @@ describe("toSearchResult", () => {
 
   it("toSearchResult_noFlights_returnsEmptyQuote", () => {
     expect(toSearchResult({}).itineraries).toEqual([]);
+  });
+});
+
+describe("parseSerpApiResponse", () => {
+  it("parseSerpApiResponse_htmlErrorPage_throwsRetryableErrorWithSnippet", () => {
+    expect(() => parseSerpApiResponse(503, "<!DOCTYPE html><html><body>Timed out</body></html>")).toThrow(
+      new FlightSearchUnavailableError("SerpApi returned 503 non-JSON: <!DOCTYPE html><html><body>Timed out</body></html>"),
+    );
+  });
+
+  it("parseSerpApiResponse_jsonError_throwsRetryableError", () => {
+    expect(() => parseSerpApiResponse(200, JSON.stringify({ error: "Google hasn't returned any results" }))).toThrow(
+      FlightSearchUnavailableError,
+    );
+  });
+
+  it("parseSerpApiResponse_jsonResults_returnsBody", () => {
+    expect(parseSerpApiResponse(200, JSON.stringify({ best_flights: [] }))).toEqual({ best_flights: [] });
   });
 });

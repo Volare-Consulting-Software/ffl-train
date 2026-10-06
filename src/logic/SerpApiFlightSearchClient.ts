@@ -1,12 +1,15 @@
 import { injectable } from "tsyringe";
 
 import type { FlightSearchClient } from "@/interfaces/flightSearchClient";
+import { FlightSearchUnavailableError } from "@/logic/FlightSearchUnavailableError";
 import type { FlightItinerary } from "@/types/flightItinerary";
 import type { FlightSearchResult } from "@/types/flightSearchResult";
 import type { FlightSegment } from "@/types/flightSegment";
 
 const SERPAPI_URL = "https://serpapi.com/search.json";
 const ONE_WAY = "2";
+// Under the Lambda/CloudFront 30 s limit, so a stalled search fails cleanly instead of timing out the request.
+const REQUEST_TIMEOUT_MS = 25_000;
 
 interface SerpApiAirportTime {
   id?: string;
@@ -27,7 +30,7 @@ interface SerpApiItinerary {
   price?: number;
 }
 
-interface SerpApiResponse {
+export interface SerpApiResponse {
   error?: string;
   search_metadata?: { google_flights_url?: string };
   best_flights?: SerpApiItinerary[];
@@ -53,13 +56,31 @@ export class SerpApiFlightSearchClient implements FlightSearchClient {
       gl: "us",
       api_key: apiKey,
     });
-    const response = await fetch(`${SERPAPI_URL}?${query}`);
-    const body = (await response.json()) as SerpApiResponse;
-    if (!response.ok) {
-      throw new Error(`SerpApi search failed with ${response.status}: ${body.error ?? "unknown error"}`);
+    let response: Response;
+    try {
+      response = await fetch(`${SERPAPI_URL}?${query}`, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    } catch (err) {
+      throw new FlightSearchUnavailableError(`SerpApi request failed: ${err instanceof Error ? err.message : String(err)}`);
     }
-    return toSearchResult(body);
+    return toSearchResult(parseSerpApiResponse(response.status, await response.text()));
   }
+}
+
+/**
+ * Parses a SerpApi reply. When Google Flights is slow SerpApi can answer with an HTML error page instead
+ * of JSON, so anything that isn't a JSON success becomes a retryable error carrying the status and a snippet.
+ */
+export function parseSerpApiResponse(status: number, text: string): SerpApiResponse {
+  let body: SerpApiResponse;
+  try {
+    body = JSON.parse(text) as SerpApiResponse;
+  } catch {
+    throw new FlightSearchUnavailableError(`SerpApi returned ${status} non-JSON: ${text.replace(/s+/g, " ").slice(0, 160)}`);
+  }
+  if (status >= 400 || body.error) {
+    throw new FlightSearchUnavailableError(`SerpApi returned ${status}: ${body.error ?? "unknown error"}`);
+  }
+  return body;
 }
 
 /** Maps every priced fare in best and other flights, cheapest first. An empty search is a valid "no flights" result. */
