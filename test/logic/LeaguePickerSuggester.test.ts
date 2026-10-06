@@ -30,7 +30,7 @@ function suggester(matchups: LeagueMatchup[], picks: Pick[]) {
   const teams = [1, 2, 3, 4, 5].map((teamId) => ({ teamId, ownerName: `Person ${teamId}` }));
   const leagueClient = new Mock<FantasyLeagueClient>()
     .setup((client) => client.getSeason(It.IsAny()))
-    .returnsAsync({ season: SEASON, teams, matchups, isSample: false });
+    .returnsAsync({ season: SEASON, teams, matchups });
   const pickRepository = new Mock<PickRepository>().setup((repository) => repository.listForSeason(SEASON)).returnsAsync(picks);
   return new LeaguePickerSuggester(leagueClient.object(), pickRepository.object());
 }

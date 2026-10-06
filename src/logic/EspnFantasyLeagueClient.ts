@@ -90,5 +90,5 @@ export function toLeagueSeason(season: number, league: EspnLeagueResponse): Leag
       awayPoints: matchup.away?.totalPoints ?? 0,
       completed: matchup.winner !== "UNDECIDED",
     }));
-  return { season, teams, matchups, isSample: false };
+  return { season, teams, matchups };
 }

@@ -22,9 +22,6 @@ export function TripOddsTable({ report }: TripOddsTableProps) {
           <Dices className="size-5" aria-hidden="true" />
           Trip odds
         </h2>
-        {report.isSample && (
-          <span className="rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs font-medium text-fg">Sample league data</span>
-        )}
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-line bg-surface">
