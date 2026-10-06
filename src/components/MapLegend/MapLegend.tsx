@@ -2,7 +2,6 @@ const ITEMS = [
   { label: "Charlotte", swatch: "bg-fg" },
   { label: "Layover", swatch: "bg-warning" },
   { label: "Destination", swatch: "bg-brand" },
-  { label: "Other picks", swatch: "bg-fg-muted" },
 ] as const;
 
 /** Names each marker color so the map never relies on color alone, and carries the required map data credit. */
