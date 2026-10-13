@@ -1,10 +1,12 @@
 import { injectable } from "tsyringe";
 
 import type { FantasyLeagueClient } from "@/interfaces/fantasyLeagueClient";
+import { dateInZone, LEAGUE_TIME_ZONE, mondayBasedWeekday } from "@/lib/dates";
 import type { LeagueSeason } from "@/types/leagueSeason";
 
 const ESPN_LEAGUE_URL = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons";
 const REGULAR_SEASON_TIER = "NONE";
+const SUNDAY = 6;
 
 interface EspnMember {
   id: string;
@@ -41,6 +43,14 @@ export interface EspnLeagueResponse {
   schedule?: EspnMatchup[];
 }
 
+export interface EspnProScheduleResponse {
+  settings?: { proTeams?: { proGamesByScoringPeriod?: Record<string, { date: number }[]> }[] };
+}
+
+export interface EspnProScheduleResponse {
+  settings?: { proTeams?: { proGamesByScoringPeriod?: Record<string, { date: number }[]> }[] };
+}
+
 /** Teams and the regular-season schedule from ESPN's fantasy football league API. */
 @injectable()
 export class EspnFantasyLeagueClient implements FantasyLeagueClient {
@@ -62,6 +72,36 @@ export class EspnFantasyLeagueClient implements FantasyLeagueClient {
     }
     return toLeagueSeason(season, (await response.json()) as EspnLeagueResponse);
   }
+
+  async getWeekSundays(season: number): Promise<Map<number, string>> {
+    const response = await fetch(`${ESPN_LEAGUE_URL}/${season}?view=proTeamSchedules_wl`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      throw new Error(`ESPN pro schedule request failed with ${response.status}`);
+    }
+    return toWeekSundays((await response.json()) as EspnProScheduleResponse);
+  }
+}
+
+/**
+ * Finds the Sunday of each NFL week from every pro team's game times, read in the league's time zone.
+ * Regular-season fantasy weeks line up one-to-one with NFL scoring periods.
+ */
+export function toWeekSundays(schedule: EspnProScheduleResponse): Map<number, string> {
+  const sundays = new Map<number, string>();
+  for (const team of schedule.settings?.proTeams ?? []) {
+    for (const [period, games] of Object.entries(team.proGamesByScoringPeriod ?? {})) {
+      for (const game of games) {
+        const gameDate = dateInZone(new Date(game.date), LEAGUE_TIME_ZONE);
+        if (mondayBasedWeekday(gameDate) === SUNDAY) {
+          sundays.set(Number(period), gameDate);
+        }
+      }
+    }
+  }
+  return sundays;
 }
 
 /**

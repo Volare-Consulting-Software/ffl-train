@@ -10,9 +10,12 @@ import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
 import { ItinerarySkeleton } from "@/components/ItinerarySkeleton/ItinerarySkeleton";
 import { MapLegend } from "@/components/MapLegend/MapLegend";
+import { MoonDrawer } from "@/components/MoonDrawer/MoonDrawer";
 import { TripOddsTable } from "@/components/TripOddsTable/TripOddsTable";
 import { TripTable } from "@/components/TripTable/TripTable";
 import type { FlightPanelState } from "@/types/flightPanelState";
+import type { MoonPanelState } from "@/types/moonPanelState";
+import type { MoonSplitReport } from "@/types/moonSplitReport";
 import type { TripDetail } from "@/types/tripDetail";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 import type { TripSummary } from "@/types/tripSummary";
@@ -40,6 +43,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
   const [detailError, setDetailError] = useState<string | null>(null);
   const [loadedRouteKey, setLoadedRouteKey] = useState<string | null>(null);
   const [flightDrawer, setFlightDrawer] = useState<FlightPanelState | null>(null);
+  const [moonDrawer, setMoonDrawer] = useState<MoonPanelState | null>(null);
 
   useEffect(() => {
     if (selectedPickId === null) {
@@ -129,6 +133,23 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
 
   const closeFlights = useCallback(() => setFlightDrawer(null), []);
 
+  const openMoonSplits = useCallback(async () => {
+    setMoonDrawer({ status: "loading" });
+    try {
+      const response = await fetch("/api/moon-splits");
+      const body = await response.json();
+      setMoonDrawer(
+        response.ok
+          ? { status: "ready", report: body as MoonSplitReport }
+          : { status: "error", message: (body as { error?: string }).error ?? "Moon stats are unavailable right now." },
+      );
+    } catch {
+      setMoonDrawer({ status: "error", message: "Moon stats are unavailable right now. Try again in a moment." });
+    }
+  }, []);
+
+  const closeMoonSplits = useCallback(() => setMoonDrawer(null), []);
+
   return (
     <main className="flex w-full flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -153,7 +174,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
             onSelect={setSelectedPickId}
             onAirportClick={(summary) => void openFlights(summary)}
           />
-          {tripOdds && <TripOddsTable report={tripOdds} />}
+          {tripOdds && <TripOddsTable report={tripOdds} onMoonClick={() => void openMoonSplits()} />}
         </section>
         <section aria-label="Route map" className="flex flex-col gap-3">
           <div className="relative h-[32rem] overflow-hidden rounded-lg border border-line" aria-busy={loadingRoute}>
@@ -180,6 +201,7 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds }: TripD
       </div>
 
       <FlightDrawer state={flightDrawer} onClose={closeFlights} />
+      <MoonDrawer state={moonDrawer} onClose={closeMoonSplits} />
     </main>
   );
 }

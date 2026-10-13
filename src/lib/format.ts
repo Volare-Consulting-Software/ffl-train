@@ -42,3 +42,8 @@ export function formatClockTime(localDateTime: string): string {
   const suffix = hours >= 12 ? "PM" : "AM";
   return `${hours % 12 || 12}:${match[2]} ${suffix}`;
 }
+
+/** Formats a win-loss record, adding ties only when there are some, e.g. `3-2` or `3-2-1`. */
+export function formatRecord(wins: number, losses: number, ties: number): string {
+  return ties > 0 ? `${wins}-${losses}-${ties}` : `${wins}-${losses}`;
+}
