@@ -1,4 +1,4 @@
-import { toLeagueSeason } from "@/logic/EspnFantasyLeagueClient";
+import { toLeagueSeason, toWeekSundays } from "@/logic/EspnFantasyLeagueClient";
 
 describe("toLeagueSeason", () => {
   it("toLeagueSeason_membersAndTeams_labelsTeamsWithOwnerNamesFallingBackToTeamName", () => {
@@ -31,5 +31,30 @@ describe("toLeagueSeason", () => {
       { week: 2, homeTeamId: 2, awayTeamId: 1, homePoints: 0, awayPoints: 0, completed: false },
       { week: 3, homeTeamId: 9, awayTeamId: null, homePoints: 88, awayPoints: 0, completed: true },
     ]);
+  });
+});
+
+describe("toWeekSundays", () => {
+  it("toWeekSundays_gamesAcrossTheWeek_picksEachWeeksEasternSunday", () => {
+    const sundays = toWeekSundays({
+      settings: {
+        proTeams: [
+          {
+            proGamesByScoringPeriod: {
+              "1": [{ date: Date.parse("2026-09-11T00:20:00Z") }],
+              "2": [{ date: Date.parse("2026-09-21T00:20:00Z") }],
+            },
+          },
+          { proGamesByScoringPeriod: { "1": [{ date: Date.parse("2026-09-13T17:00:00Z") }] } },
+        ],
+      },
+    });
+
+    expect(sundays).toEqual(
+      new Map([
+        [1, "2026-09-13"],
+        [2, "2026-09-20"],
+      ]),
+    );
   });
 });

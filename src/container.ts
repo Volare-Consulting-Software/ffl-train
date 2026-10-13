@@ -8,6 +8,9 @@ import { type FantasyLeagueClient, FantasyLeagueClientToken } from "@/interfaces
 import { type FlightSearchRepository, FlightSearchRepositoryToken } from "@/interfaces/flightSearchRepository";
 import { type FlightQuoteService, FlightQuoteServiceToken } from "@/interfaces/flightQuoteService";
 import { type FlightSearchClient, FlightSearchClientToken } from "@/interfaces/flightSearchClient";
+import { type MoonPhaseClient, MoonPhaseClientToken } from "@/interfaces/moonPhaseClient";
+import { type MoonPhaseRepository, MoonPhaseRepositoryToken } from "@/interfaces/moonPhaseRepository";
+import { type MoonSplitService, MoonSplitServiceToken } from "@/interfaces/moonSplitService";
 import { type PickRepository, PickRepositoryToken } from "@/interfaces/pickRepository";
 import { type PickerSuggester, PickerSuggesterToken } from "@/interfaces/pickerSuggester";
 import { type TrainRouter, TrainRouterToken } from "@/interfaces/trainRouter";
@@ -16,16 +19,19 @@ import { type TripOddsService, TripOddsServiceToken } from "@/interfaces/tripOdd
 import { type TripService, TripServiceToken } from "@/interfaces/tripService";
 import { CachedFlightQuoteService } from "@/logic/CachedFlightQuoteService";
 import { ConnectionScanRouter } from "@/logic/ConnectionScanRouter";
+import { CrescentMoonSplitService } from "@/logic/CrescentMoonSplitService";
 import { EspnFantasyLeagueClient } from "@/logic/EspnFantasyLeagueClient";
 import { LeaguePickerSuggester } from "@/logic/LeaguePickerSuggester";
 import { MonteCarloTripOddsService } from "@/logic/MonteCarloTripOddsService";
 import { PrismaAirportLocator } from "@/logic/PrismaAirportLocator";
 import { PrismaDateUsageRepository } from "@/logic/PrismaDateUsageRepository";
 import { PrismaFlightSearchRepository } from "@/logic/PrismaFlightSearchRepository";
+import { PrismaMoonPhaseRepository } from "@/logic/PrismaMoonPhaseRepository";
 import { PrismaPickRepository } from "@/logic/PrismaPickRepository";
 import { PrismaTransitRepository } from "@/logic/PrismaTransitRepository";
 import { SerpApiFlightSearchClient } from "@/logic/SerpApiFlightSearchClient";
 import { TrainTripService } from "@/logic/TrainTripService";
+import { UsnoMoonPhaseClient } from "@/logic/UsnoMoonPhaseClient";
 import { WeeklyDateRateLimiter } from "@/logic/WeeklyDateRateLimiter";
 
 // Singletons: the transit schedule, routing plans and airport list are cached in memory per process.
@@ -44,5 +50,8 @@ container.register<PickerSuggester>(PickerSuggesterToken, { useClass: LeaguePick
 container.register<TripService>(TripServiceToken, { useClass: TrainTripService }, singleton);
 container.register<TripOddsService>(TripOddsServiceToken, { useClass: MonteCarloTripOddsService }, singleton);
 container.register<FlightQuoteService>(FlightQuoteServiceToken, { useClass: CachedFlightQuoteService }, singleton);
+container.register<MoonPhaseRepository>(MoonPhaseRepositoryToken, { useClass: PrismaMoonPhaseRepository }, singleton);
+container.register<MoonPhaseClient>(MoonPhaseClientToken, { useClass: UsnoMoonPhaseClient }, singleton);
+container.register<MoonSplitService>(MoonSplitServiceToken, { useClass: CrescentMoonSplitService }, singleton);
 
 export { container };

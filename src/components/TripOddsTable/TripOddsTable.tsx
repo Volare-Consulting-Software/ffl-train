@@ -1,17 +1,21 @@
-import { Dices } from "lucide-react";
+import { Dices, Moon } from "lucide-react";
 
 import { InfoTooltip } from "@/components/InfoTooltip/InfoTooltip";
+import { formatRecord } from "@/lib/format";
+import { MOON_TEAM_OWNER } from "@/lib/moonPhase";
 import { LOSER_BRACKET_SIZE } from "@/logic/LoserBracketSimulator";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 
 export interface TripOddsTableProps {
   report: TripOddsReport;
+  /** Shows a crescent moon button beside the moon team's name that calls this when clicked. */
+  onMoonClick?: () => void;
 }
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 /** Each person's chance of riding the train, as the ultimate loser or as the wheel's pick. */
-export function TripOddsTable({ report }: TripOddsTableProps) {
+export function TripOddsTable({ report, onMoonClick }: TripOddsTableProps) {
   const highest = Math.max(...report.teams.map((team) => team.tripProbability), 0.0001);
   const bracketCutoff = report.teams.length - LOSER_BRACKET_SIZE;
 
@@ -61,14 +65,27 @@ export function TripOddsTable({ report }: TripOddsTableProps) {
           <tbody>
             {report.teams.map((team) => (
               <tr key={team.teamId} className="border-t border-line">
-                <td className="px-4 py-3 font-semibold text-fg">{team.ownerName}</td>
+                <td className="px-4 py-3 font-semibold text-fg">
+                  <span className="inline-flex items-center gap-1.5">
+                    {team.ownerName}
+                    {onMoonClick && team.ownerName === MOON_TEAM_OWNER && (
+                      <button
+                        type="button"
+                        onClick={onMoonClick}
+                        aria-label={`Crescent moon summary for ${team.ownerName}`}
+                        className="inline-flex size-7 items-center justify-center rounded-md text-brand hover:bg-brand-subtle dark:text-fg dark:hover:bg-surface-raised"
+                      >
+                        <Moon className="size-4" aria-hidden="true" />
+                      </button>
+                    )}
+                  </span>
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
                   {team.standing}
                   {team.standing > bracketCutoff && <span className="sr-only"> (currently in the loser bracket)</span>}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
-                  {team.wins}-{team.losses}
-                  {team.ties > 0 ? `-${team.ties}` : ""}
+                  {formatRecord(team.wins, team.losses, team.ties)}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{team.pointsFor.toFixed(1)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{percent(team.loserBracketProbability)}</td>

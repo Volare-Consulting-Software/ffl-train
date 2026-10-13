@@ -1,13 +1,11 @@
 "use client";
 
 import { AlertCircle, ExternalLink, Loader2, Plane, X } from "lucide-react";
-import { useEffect, useRef } from "react";
 
+import { useDrawerFocusTrap } from "@/hooks/useDrawerFocusTrap";
 import { formatClockTime, formatDuration, formatIsoDate, formatUsd } from "@/lib/format";
 import type { FlightPanelState } from "@/types/flightPanelState";
 import type { FlightQuote } from "@/types/flightQuote";
-
-const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export interface FlightDrawerProps {
   state: FlightPanelState | null;
@@ -16,42 +14,7 @@ export interface FlightDrawerProps {
 
 /** Right-side drawer with the fare from the destination's airport back to Charlotte. */
 export function FlightDrawer({ state, onClose }: FlightDrawerProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const isOpen = state !== null;
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-    const trigger = document.activeElement as HTMLElement | null;
-    panelRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !panelRef.current) {
-        return;
-      }
-      // Keep keyboard focus inside the drawer while it is open.
-      const focusable = [...panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      trigger?.focus();
-    };
-  }, [isOpen, onClose]);
+  const panelRef = useDrawerFocusTrap(state !== null, onClose);
 
   if (!state) {
     return null;

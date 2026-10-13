@@ -1,0 +1,9 @@
+model MoonPhase {
+  id                  Int      @id @default(autoincrement())
+  date                DateTime @unique @db.Date
+  illuminationPercent Int
+  phaseName           String
+  fetchedAt           DateTime @default(now())
+
+  @@map("moon_phases")
+}
