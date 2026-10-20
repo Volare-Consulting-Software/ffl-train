@@ -10,7 +10,7 @@ import { getDb } from "@/lib/db";
 import { isEasternOrCentral } from "@/lib/timeZones";
 import { ORIGIN_STATION_CODE } from "@/logic/TrainTripService";
 
-const REACHABILITY_DAYS = 7;
+const REACHABILITY_DAYS = 14;
 const USAGE = `Usage: npm run pick:add -- --station <CODE> [--week <n>] [--season <year>] [--team-id <id> --picker "<name>"] [--name "<display name>"]
 
   --station   Amtrak station code, e.g. CHI (required)
