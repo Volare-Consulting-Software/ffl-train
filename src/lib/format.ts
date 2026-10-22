@@ -27,6 +27,11 @@ export function formatIsoDate(isoDate: string): string {
   }).format(new Date(`${isoDate}T00:00:00Z`));
 }
 
+/** Formats a `YYYY-MM` month as `October`. */
+export function formatMonth(month: string): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "long" }).format(new Date(`${month}-01T00:00:00Z`));
+}
+
 /** Formats whole dollars, e.g. `$238`. */
 export function formatUsd(amount: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);

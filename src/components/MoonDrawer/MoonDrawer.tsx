@@ -258,11 +258,7 @@ function SplitCard({ title, split }: { title: string; split: MoonSplit }) {
       </p>
       <dl className="mt-3 flex flex-col gap-1 text-sm">
         <div className="flex justify-between gap-2">
-          <dt className="text-fg-secondary">Points for</dt>
-          <dd className="font-semibold text-fg tabular-nums">{split.pointsFor.toFixed(1)}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-fg-secondary">Per game</dt>
+          <dt className="text-fg-secondary">Pts per game</dt>
           <dd className="font-semibold text-fg tabular-nums">{split.averagePoints === null ? "–" : split.averagePoints.toFixed(1)}</dd>
         </div>
       </dl>

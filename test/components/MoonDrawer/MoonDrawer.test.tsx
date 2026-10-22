@@ -29,10 +29,12 @@ describe("MoonDrawer", () => {
     expect(screen.getByRole("dialog", { name: "Crescent Moon Summary" })).toBeInTheDocument();
     const crescent = screen.getByRole("region", { name: "Crescent moon" });
     expect(within(crescent).getByText("1-0")).toBeInTheDocument();
-    expect(within(crescent).getAllByText("130.0")).toHaveLength(2);
+    expect(within(crescent).getByText("130.0")).toBeInTheDocument();
+    expect(within(crescent).queryByText("Points for")).not.toBeInTheDocument();
     const other = screen.getByRole("region", { name: "Every other Sunday" });
     expect(within(other).getByText("1-1")).toBeInTheDocument();
-    expect(within(other).getByText("200.5")).toBeInTheDocument();
+    expect(within(other).getByText("100.3")).toBeInTheDocument();
+    expect(within(other).queryByText("200.5")).not.toBeInTheDocument();
     const weekOne = screen.getByRole("listitem", { name: "Week 1" });
     expect(weekOne).toHaveTextContent("Sun, Sep 13, 2026");
     expect(weekOne).toHaveTextContent("7% lit · Waxing Crescent");
