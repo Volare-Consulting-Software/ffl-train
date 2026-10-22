@@ -16,7 +16,7 @@ describe("toLeagueSeason", () => {
     ]);
   });
 
-  it("toLeagueSeason_schedule_keepsRegularSeasonAndMarksUndecidedWeeksUnplayed", () => {
+  it("toLeagueSeason_schedule_splitsPlayoffsFromRegularSeasonAndMarksUndecidedWeeksUnplayed", () => {
     const season = toLeagueSeason(2026, {
       schedule: [
         { matchupPeriodId: 1, winner: "HOME", playoffTierType: "NONE", home: { teamId: 1, totalPoints: 120.4 }, away: { teamId: 2, totalPoints: 98.1 } },
@@ -31,6 +31,30 @@ describe("toLeagueSeason", () => {
       { week: 2, homeTeamId: 2, awayTeamId: 1, homePoints: 0, awayPoints: 0, completed: false },
       { week: 3, homeTeamId: 9, awayTeamId: null, homePoints: 88, awayPoints: 0, completed: true },
     ]);
+    expect(season.playoffMatchups).toEqual([
+      { week: 15, homeTeamId: 1, awayTeamId: 2, homePoints: 0, awayPoints: 0, completed: false },
+    ]);
+  });
+
+  it("toLeagueSeason_weekInProgress_usesLivePointsUntilDecided", () => {
+    const season = toLeagueSeason(2026, {
+      schedule: [
+        { matchupPeriodId: 6, winner: "AWAY", home: { teamId: 1, totalPoints: 90, totalPointsLive: 91 }, away: { teamId: 2, totalPoints: 110 } },
+        { matchupPeriodId: 7, winner: "UNDECIDED", home: { teamId: 1, totalPoints: 0, totalPointsLive: 42.6 }, away: { teamId: 2, totalPoints: 0 } },
+        {
+          matchupPeriodId: 16,
+          winner: "UNDECIDED",
+          playoffTierType: "LOSERS_CONSOLATION_LADDER",
+          home: { teamId: 3, totalPoints: 0, totalPointsLive: 12 },
+        },
+      ],
+    });
+
+    expect(season.matchups).toEqual([
+      { week: 6, homeTeamId: 1, awayTeamId: 2, homePoints: 90, awayPoints: 110, completed: true },
+      { week: 7, homeTeamId: 1, awayTeamId: 2, homePoints: 42.6, awayPoints: 0, completed: false },
+    ]);
+    expect(season.playoffMatchups).toEqual([{ week: 16, homeTeamId: 3, awayTeamId: null, homePoints: 12, awayPoints: 0, completed: false }]);
   });
 });
 

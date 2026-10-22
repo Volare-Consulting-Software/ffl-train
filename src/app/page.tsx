@@ -18,6 +18,7 @@ export default async function Home({ searchParams }: HomeProps) {
       initialDate={date}
       initialSummaries={dashboard.summaries}
       tripOdds={dashboard.tripOdds}
+      monthlyLeaderboard={dashboard.monthlyLeaderboard}
     />
   );
 }

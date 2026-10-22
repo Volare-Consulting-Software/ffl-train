@@ -28,6 +28,7 @@ const LEAGUE: LeagueSeason = {
     { week: 3, homeTeamId: MOON_TEAM, awayTeamId: 7, homePoints: 110, awayPoints: 105, completed: true },
     { week: 4, homeTeamId: MOON_TEAM, awayTeamId: 7, homePoints: 0, awayPoints: 0, completed: false },
   ],
+  playoffMatchups: [],
 };
 const SAVED: MoonPhase[] = [
   { date: "2026-09-13", illuminationPercent: 7, phaseName: "Waxing Crescent" },

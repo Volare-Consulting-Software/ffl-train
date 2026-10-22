@@ -2,6 +2,7 @@ import { injectable } from "tsyringe";
 
 import type { FantasyLeagueClient } from "@/interfaces/fantasyLeagueClient";
 import { dateInZone, LEAGUE_TIME_ZONE, mondayBasedWeekday } from "@/lib/dates";
+import type { LeagueMatchup } from "@/types/leagueMatchup";
 import type { LeagueSeason } from "@/types/leagueSeason";
 
 const ESPN_LEAGUE_URL = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons";
@@ -27,6 +28,7 @@ interface EspnTeam {
 interface EspnMatchupSide {
   teamId: number;
   totalPoints: number;
+  totalPointsLive?: number;
 }
 
 interface EspnMatchup {
@@ -47,11 +49,7 @@ export interface EspnProScheduleResponse {
   settings?: { proTeams?: { proGamesByScoringPeriod?: Record<string, { date: number }[]> }[] };
 }
 
-export interface EspnProScheduleResponse {
-  settings?: { proTeams?: { proGamesByScoringPeriod?: Record<string, { date: number }[]> }[] };
-}
-
-/** Teams and the regular-season schedule from ESPN's fantasy football league API. */
+/** Teams, the regular-season schedule and playoff matchups from ESPN's fantasy football league API. */
 @injectable()
 export class EspnFantasyLeagueClient implements FantasyLeagueClient {
   async getSeason(season: number): Promise<LeagueSeason> {
@@ -64,7 +62,7 @@ export class EspnFantasyLeagueClient implements FantasyLeagueClient {
       headers.Cookie = `espn_s2=${process.env.ESPN_S2}; SWID=${process.env.ESPN_SWID}`;
     }
     const response = await fetch(
-      `${ESPN_LEAGUE_URL}/${season}/segments/0/leagues/${leagueId}?view=mMatchupScore&view=mTeam`,
+      `${ESPN_LEAGUE_URL}/${season}/segments/0/leagues/${leagueId}?view=mMatchupScore&view=mLiveScoring&view=mTeam`,
       { headers, cache: "no-store" },
     );
     if (!response.ok) {
@@ -105,8 +103,9 @@ export function toWeekSundays(schedule: EspnProScheduleResponse): Map<number, st
 }
 
 /**
- * Maps ESPN's league payload to teams labeled with the owner's name (falling back to the team name)
- * and the regular-season schedule. ESPN playoff matchups are left out; an undecided week is unplayed.
+ * Maps ESPN's league payload to teams labeled with the owner's name (falling back to the team name),
+ * the regular-season schedule and every playoff and consolation matchup. An undecided week is unplayed
+ * or in progress, and carries ESPN's live points.
  */
 export function toLeagueSeason(season: number, league: EspnLeagueResponse): LeagueSeason {
   const memberNames = new Map(
@@ -120,15 +119,25 @@ export function toLeagueSeason(season: number, league: EspnLeagueResponse): Leag
     const teamName = team.name ?? `${team.location ?? ""} ${team.nickname ?? ""}`.trim();
     return { teamId: team.id, ownerName: (ownerId && memberNames.get(ownerId)) || teamName || `Team ${team.id}` };
   });
-  const matchups = (league.schedule ?? [])
-    .filter((matchup) => (matchup.playoffTierType ?? REGULAR_SEASON_TIER) === REGULAR_SEASON_TIER && matchup.home)
-    .map((matchup) => ({
-      week: matchup.matchupPeriodId,
-      homeTeamId: matchup.home!.teamId,
-      awayTeamId: matchup.away?.teamId ?? null,
-      homePoints: matchup.home!.totalPoints,
-      awayPoints: matchup.away?.totalPoints ?? 0,
-      completed: matchup.winner !== "UNDECIDED",
-    }));
-  return { season, teams, matchups };
+  const scheduled = (league.schedule ?? []).filter((matchup) => matchup.home);
+  const isRegularSeason = (matchup: EspnMatchup) => (matchup.playoffTierType ?? REGULAR_SEASON_TIER) === REGULAR_SEASON_TIER;
+  return {
+    season,
+    teams,
+    matchups: scheduled.filter(isRegularSeason).map(toLeagueMatchup),
+    playoffMatchups: scheduled.filter((matchup) => !isRegularSeason(matchup)).map(toLeagueMatchup),
+  };
+}
+
+function toLeagueMatchup(matchup: EspnMatchup): LeagueMatchup {
+  const completed = matchup.winner !== "UNDECIDED";
+  const points = (side?: EspnMatchupSide) => (completed ? side?.totalPoints : (side?.totalPointsLive ?? side?.totalPoints)) ?? 0;
+  return {
+    week: matchup.matchupPeriodId,
+    homeTeamId: matchup.home!.teamId,
+    awayTeamId: matchup.away?.teamId ?? null,
+    homePoints: points(matchup.home),
+    awayPoints: points(matchup.away),
+    completed,
+  };
 }

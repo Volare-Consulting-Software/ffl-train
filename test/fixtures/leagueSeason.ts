@@ -28,5 +28,6 @@ export function buildLeagueSeason(averages: number[], completedWeeks: number, to
     season: 2026,
     teams: teamIds.map((teamId) => ({ teamId, ownerName: `Person ${teamId}` })),
     matchups,
+    playoffMatchups: [],
   };
 }

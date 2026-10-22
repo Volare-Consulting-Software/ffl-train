@@ -8,6 +8,7 @@ import { type FantasyLeagueClient, FantasyLeagueClientToken } from "@/interfaces
 import { type FlightSearchRepository, FlightSearchRepositoryToken } from "@/interfaces/flightSearchRepository";
 import { type FlightQuoteService, FlightQuoteServiceToken } from "@/interfaces/flightQuoteService";
 import { type FlightSearchClient, FlightSearchClientToken } from "@/interfaces/flightSearchClient";
+import { type MonthlyLeaderboardService, MonthlyLeaderboardServiceToken } from "@/interfaces/monthlyLeaderboardService";
 import { type MoonPhaseClient, MoonPhaseClientToken } from "@/interfaces/moonPhaseClient";
 import { type MoonPhaseRepository, MoonPhaseRepositoryToken } from "@/interfaces/moonPhaseRepository";
 import { type MoonSplitService, MoonSplitServiceToken } from "@/interfaces/moonSplitService";
@@ -21,6 +22,7 @@ import { CachedFlightQuoteService } from "@/logic/CachedFlightQuoteService";
 import { ConnectionScanRouter } from "@/logic/ConnectionScanRouter";
 import { CrescentMoonSplitService } from "@/logic/CrescentMoonSplitService";
 import { EspnFantasyLeagueClient } from "@/logic/EspnFantasyLeagueClient";
+import { LeagueMonthlyLeaderboardService } from "@/logic/LeagueMonthlyLeaderboardService";
 import { LeaguePickerSuggester } from "@/logic/LeaguePickerSuggester";
 import { MonteCarloTripOddsService } from "@/logic/MonteCarloTripOddsService";
 import { PrismaAirportLocator } from "@/logic/PrismaAirportLocator";
@@ -49,6 +51,7 @@ container.register<DateRateLimiter>(DateRateLimiterToken, { useClass: WeeklyDate
 container.register<PickerSuggester>(PickerSuggesterToken, { useClass: LeaguePickerSuggester }, singleton);
 container.register<TripService>(TripServiceToken, { useClass: TrainTripService }, singleton);
 container.register<TripOddsService>(TripOddsServiceToken, { useClass: MonteCarloTripOddsService }, singleton);
+container.register<MonthlyLeaderboardService>(MonthlyLeaderboardServiceToken, { useClass: LeagueMonthlyLeaderboardService }, singleton);
 container.register<FlightQuoteService>(FlightQuoteServiceToken, { useClass: CachedFlightQuoteService }, singleton);
 container.register<MoonPhaseRepository>(MoonPhaseRepositoryToken, { useClass: PrismaMoonPhaseRepository }, singleton);
 container.register<MoonPhaseClient>(MoonPhaseClientToken, { useClass: UsnoMoonPhaseClient }, singleton);
