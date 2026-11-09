@@ -9,7 +9,6 @@ const REPORT: InSeasonPrizeLeaderboardReport = {
   season: 2026,
   current: {
     period: { firstWeek: 5, lastWeek: 9 },
-    liveWeek: 7,
     remainingWeeks: [8, 9],
     standings: [
       { teamId: 3, ownerName: "Ryan McCoy", points: 699, behind: 0 },
@@ -33,7 +32,6 @@ describe("InSeasonPrizeLeaderboard", () => {
     render(<InSeasonPrizeLeaderboard report={REPORT} />);
 
     expect(screen.getByRole("heading", { name: "Weeks 5–9 leaderboard" })).toBeInTheDocument();
-    expect(screen.getByText("Week 7 live")).toBeInTheDocument();
     expect(screen.getByText("2 weeks left")).toBeInTheDocument();
     const rows = within(screen.getByRole("list", { name: "Standings" })).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent("Ryan McCoy");
@@ -63,14 +61,16 @@ describe("InSeasonPrizeLeaderboard", () => {
     expect(more.map((row) => row.textContent)).toEqual([expect.stringContaining("Person 6"), expect.stringContaining("Person 7")]);
   });
 
-  it.each([
-    [[9], 8, "1 week left"],
-    [[], 9, "Final week"],
-    [[], null, "Final"],
-  ])("InSeasonPrizeLeaderboard_remainingWeeks%j_labels%s", (remainingWeeks, liveWeek, label) => {
-    render(<InSeasonPrizeLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, remainingWeeks, liveWeek } }} />);
+  it("InSeasonPrizeLeaderboard_oneWeekRemaining_labelsSingularWeek", () => {
+    render(<InSeasonPrizeLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, remainingWeeks: [9] } }} />);
 
-    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getByText("1 week left")).toBeInTheDocument();
+  });
+
+  it("InSeasonPrizeLeaderboard_noWeeksRemaining_hasNoWeeksLeftLabel", () => {
+    render(<InSeasonPrizeLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, remainingWeeks: [] } }} />);
+
+    expect(screen.queryByText(/left$/)).not.toBeInTheDocument();
   });
 
   it("InSeasonPrizeLeaderboard_fiveOrFewerTeams_hasNoExpand", () => {
@@ -94,7 +94,6 @@ describe("InSeasonPrizeLeaderboard", () => {
       season: 2026,
       current: {
         period: { firstWeek: 1, lastWeek: 4 },
-        liveWeek: 1,
         remainingWeeks: [2, 3, 4],
         standings: [{ teamId: 1, ownerName: "Sam Longietti", points: 0, behind: 0 }],
       },

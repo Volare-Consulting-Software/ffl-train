@@ -67,8 +67,7 @@ export class LeagueInSeasonPrizeLeaderboardService implements InSeasonPrizeLeade
 }
 
 function toLeaderboard({ period, matchups, remainingWeeks }: PeriodProgress, teams: LeagueTeam[]): PrizePeriodLeaderboard {
-  const liveWeek = matchups.find((matchup) => !matchup.completed)?.week ?? null;
-  return { period, liveWeek, remainingWeeks, standings: rank(matchups, teams) };
+  return { period, remainingWeeks, standings: rank(matchups, teams) };
 }
 
 function toWinner({ period, matchups }: PeriodProgress, teams: LeagueTeam[]): PrizePeriodWinner {

@@ -46,7 +46,6 @@ describe("getReport", () => {
     const report = await service.getReport(SEASON, "2026-09-15");
 
     expect(report.current?.period).toEqual({ firstWeek: 1, lastWeek: 4 });
-    expect(report.current?.liveWeek).toBeNull();
     expect(report.current?.remainingWeeks).toEqual([2, 3, 4]);
     expect(report.winners).toEqual([]);
   });
@@ -58,7 +57,6 @@ describe("getReport", () => {
 
     expect(report.current).toEqual({
       period: { firstWeek: 5, lastWeek: 9 },
-      liveWeek: 6,
       remainingWeeks: [7, 8, 9],
       standings: [
         { teamId: 2, ownerName: "Sam Longietti", points: 145, behind: 0 },
@@ -75,7 +73,6 @@ describe("getReport", () => {
     const report = await service.getReport(SEASON, "2026-11-09");
 
     expect(report.current?.period).toEqual({ firstWeek: 5, lastWeek: 9 });
-    expect(report.current?.liveWeek).toBe(9);
     expect(report.current?.remainingWeeks).toEqual([]);
   });
 
@@ -112,7 +109,7 @@ describe("getReport", () => {
     expect(report.current?.period).toEqual({ firstWeek: 5, lastWeek: 9 });
   });
 
-  it("getReport_regularSeasonOver_keepsLastPeriodFinalWithEarlierWinners", async () => {
+  it("getReport_regularSeasonOver_keepsLastPeriodCurrentWithEarlierWinners", async () => {
     const service = buildService([
       ...weeks(1, 4, [100, 90, 80, 70]),
       ...weeks(5, 9, [90, 100, 80, 70]),
@@ -126,7 +123,6 @@ describe("getReport", () => {
       [5, "Sam Longietti", 500],
     ]);
     expect(report.current?.period).toEqual({ firstWeek: 10, lastWeek: 14 });
-    expect(report.current?.liveWeek).toBeNull();
     expect(report.current?.standings[0]).toEqual({ teamId: 4, ownerName: "Mark Pizzuto", points: 500, behind: 0 });
   });
 

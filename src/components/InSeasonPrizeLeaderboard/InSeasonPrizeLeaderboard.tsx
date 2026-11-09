@@ -1,4 +1,4 @@
-import { ChevronDown, Radio, Trophy } from "lucide-react";
+import { ChevronDown, Trophy } from "lucide-react";
 
 import type { InSeasonPrizeLeaderboardReport } from "@/types/inSeasonPrizeLeaderboardReport";
 import type { PrizePeriod } from "@/types/prizePeriod";
@@ -15,12 +15,7 @@ const points = (value: number) => value.toFixed(1);
 const weekRange = ({ firstWeek, lastWeek }: PrizePeriod) => `Weeks ${firstWeek}–${lastWeek}`;
 
 /** How much of the period is still to play, counting weeks that haven't kicked off yet. */
-function weeksLeftLabel(remaining: number, liveWeek: number | null): string {
-  if (remaining > 0) {
-    return `${remaining} ${remaining === 1 ? "week" : "weeks"} left`;
-  }
-  return liveWeek !== null ? "Final week" : "Final";
-}
+const weeksLeftLabel = (remaining: number) => `${remaining} ${remaining === 1 ? "week" : "weeks"} left`;
 
 function StandingRow({ standing, rank }: { standing: PrizeStanding; rank: number }) {
   const leading = standing.behind === 0;
@@ -57,16 +52,8 @@ export function InSeasonPrizeLeaderboard({ report }: InSeasonPrizeLeaderboardPro
           <Trophy className="size-5" aria-hidden="true" />
           {current ? `${weekRange(current.period)} leaderboard` : "In-season prize leaderboard"}
         </h2>
-        {current && (
-          <p className="flex flex-wrap items-center gap-2 text-sm text-fg-secondary">
-            <span className="font-semibold text-fg-body">{weeksLeftLabel(current.remainingWeeks.length, current.liveWeek)}</span>
-            {current.liveWeek !== null && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-semibold text-brand dark:bg-surface-raised dark:text-fg">
-                <Radio className="size-3" aria-hidden="true" />
-                Week {current.liveWeek} live
-              </span>
-            )}
-          </p>
+        {current && current.remainingWeeks.length > 0 && (
+          <p className="text-sm font-semibold text-fg-body">{weeksLeftLabel(current.remainingWeeks.length)}</p>
         )}
       </div>
 
