@@ -1,4 +1,4 @@
-import type { MonthlyLeaderboardReport } from "@/types/monthlyLeaderboardReport";
+import type { InSeasonPrizeLeaderboardReport } from "@/types/inSeasonPrizeLeaderboardReport";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 import type { TripSummary } from "@/types/tripSummary";
 
@@ -6,5 +6,5 @@ import type { TripSummary } from "@/types/tripSummary";
 export interface DashboardData {
   summaries: TripSummary[];
   tripOdds: TripOddsReport | null;
-  monthlyLeaderboard: MonthlyLeaderboardReport | null;
+  inSeasonPrizeLeaderboard: InSeasonPrizeLeaderboardReport | null;
 }

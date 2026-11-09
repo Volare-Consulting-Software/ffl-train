@@ -1,21 +1,21 @@
 import { container } from "@/container";
 import { type DateUsageRepository, DateUsageRepositoryToken } from "@/interfaces/dateUsageRepository";
-import { type MonthlyLeaderboardService, MonthlyLeaderboardServiceToken } from "@/interfaces/monthlyLeaderboardService";
+import { type InSeasonPrizeLeaderboardService, InSeasonPrizeLeaderboardServiceToken } from "@/interfaces/inSeasonPrizeLeaderboardService";
 import { type TripOddsService, TripOddsServiceToken } from "@/interfaces/tripOddsService";
 import { type TripService, TripServiceToken } from "@/interfaces/tripService";
 import { dateInZone, LEAGUE_TIME_ZONE } from "@/lib/dates";
 import type { DashboardData } from "@/types/dashboardData";
-import type { MonthlyLeaderboardReport } from "@/types/monthlyLeaderboardReport";
+import type { InSeasonPrizeLeaderboardReport } from "@/types/inSeasonPrizeLeaderboardReport";
 import type { TripOddsReport } from "@/types/tripOddsReport";
 
 /** Server boundary that resolves services and gathers everything the home page needs for a date. */
 export async function loadDashboard(departureDate: string): Promise<DashboardData> {
-  const [summaries, tripOdds, monthlyLeaderboard] = await Promise.all([
+  const [summaries, tripOdds, inSeasonPrizeLeaderboard] = await Promise.all([
     container.resolve<TripService>(TripServiceToken).listSummaries(departureDate),
     loadTripOdds(),
-    loadMonthlyLeaderboard(),
+    loadInSeasonPrizeLeaderboard(),
   ]);
-  return { summaries, tripOdds, monthlyLeaderboard };
+  return { summaries, tripOdds, inSeasonPrizeLeaderboard };
 }
 
 /** Every departure date someone has already paid to look up, newest first. */
@@ -36,13 +36,13 @@ async function loadTripOdds(): Promise<TripOddsReport | null> {
   }
 }
 
-async function loadMonthlyLeaderboard(): Promise<MonthlyLeaderboardReport | null> {
+async function loadInSeasonPrizeLeaderboard(): Promise<InSeasonPrizeLeaderboardReport | null> {
   try {
     return await container
-      .resolve<MonthlyLeaderboardService>(MonthlyLeaderboardServiceToken)
+      .resolve<InSeasonPrizeLeaderboardService>(InSeasonPrizeLeaderboardServiceToken)
       .getReport(currentSeason(), dateInZone(new Date(), LEAGUE_TIME_ZONE));
   } catch (err) {
-    console.warn(`Monthly leaderboard unavailable: ${err instanceof Error ? err.message : String(err)}`);
+    console.warn(`In-season prize leaderboard unavailable: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }
