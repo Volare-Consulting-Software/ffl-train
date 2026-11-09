@@ -49,7 +49,7 @@ export interface EspnProScheduleResponse {
   settings?: { proTeams?: { proGamesByScoringPeriod?: Record<string, { date: number }[]> }[] };
 }
 
-/** Teams, the regular-season schedule and playoff matchups from ESPN's fantasy football league API. */
+/** Teams and the regular-season schedule from ESPN's fantasy football league API. */
 @injectable()
 export class EspnFantasyLeagueClient implements FantasyLeagueClient {
   async getSeason(season: number): Promise<LeagueSeason> {
@@ -103,9 +103,8 @@ export function toWeekSundays(schedule: EspnProScheduleResponse): Map<number, st
 }
 
 /**
- * Maps ESPN's league payload to teams labeled with the owner's name (falling back to the team name),
- * the regular-season schedule and every playoff and consolation matchup. An undecided week is unplayed
- * or in progress, and carries ESPN's live points.
+ * Maps ESPN's league payload to teams labeled with the owner's name (falling back to the team name)
+ * and the regular-season schedule. An undecided week is unplayed or in progress, and carries ESPN's live points.
  */
 export function toLeagueSeason(season: number, league: EspnLeagueResponse): LeagueSeason {
   const memberNames = new Map(
@@ -119,14 +118,10 @@ export function toLeagueSeason(season: number, league: EspnLeagueResponse): Leag
     const teamName = team.name ?? `${team.location ?? ""} ${team.nickname ?? ""}`.trim();
     return { teamId: team.id, ownerName: (ownerId && memberNames.get(ownerId)) || teamName || `Team ${team.id}` };
   });
-  const scheduled = (league.schedule ?? []).filter((matchup) => matchup.home);
-  const isRegularSeason = (matchup: EspnMatchup) => (matchup.playoffTierType ?? REGULAR_SEASON_TIER) === REGULAR_SEASON_TIER;
-  return {
-    season,
-    teams,
-    matchups: scheduled.filter(isRegularSeason).map(toLeagueMatchup),
-    playoffMatchups: scheduled.filter((matchup) => !isRegularSeason(matchup)).map(toLeagueMatchup),
-  };
+  const matchups = (league.schedule ?? [])
+    .filter((matchup) => (matchup.playoffTierType ?? REGULAR_SEASON_TIER) === REGULAR_SEASON_TIER && matchup.home)
+    .map(toLeagueMatchup);
+  return { season, teams, matchups };
 }
 
 function toLeagueMatchup(matchup: EspnMatchup): LeagueMatchup {

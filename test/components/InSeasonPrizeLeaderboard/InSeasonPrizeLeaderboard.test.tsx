@@ -2,15 +2,13 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { MonthlyLeaderboard } from "@/components/MonthlyLeaderboard/MonthlyLeaderboard";
-import type { MonthlyLeaderboardReport } from "@/types/monthlyLeaderboardReport";
+import { InSeasonPrizeLeaderboard } from "@/components/InSeasonPrizeLeaderboard/InSeasonPrizeLeaderboard";
+import type { InSeasonPrizeLeaderboardReport } from "@/types/inSeasonPrizeLeaderboardReport";
 
-const REPORT: MonthlyLeaderboardReport = {
+const REPORT: InSeasonPrizeLeaderboardReport = {
   season: 2026,
   current: {
-    month: "2026-10",
-    weeks: [4, 5, 6, 7],
-    liveWeek: 7,
+    period: { firstWeek: 5, lastWeek: 9 },
     remainingWeeks: [8, 9],
     standings: [
       { teamId: 3, ownerName: "Ryan McCoy", points: 699, behind: 0 },
@@ -19,7 +17,7 @@ const REPORT: MonthlyLeaderboardReport = {
   },
   winners: [
     {
-      month: "2026-09",
+      period: { firstWeek: 1, lastWeek: 4 },
       points: 612.4,
       teams: [
         { teamId: 1, ownerName: "Sam Longietti" },
@@ -29,12 +27,11 @@ const REPORT: MonthlyLeaderboardReport = {
   ],
 };
 
-describe("MonthlyLeaderboard", () => {
-  it("MonthlyLeaderboard_currentMonth_showsLeaderPointsAndDeficits", () => {
-    render(<MonthlyLeaderboard report={REPORT} />);
+describe("InSeasonPrizeLeaderboard", () => {
+  it("InSeasonPrizeLeaderboard_currentPeriod_showsLeaderPointsAndDeficits", () => {
+    render(<InSeasonPrizeLeaderboard report={REPORT} />);
 
-    expect(screen.getByRole("heading", { name: "October leaderboard" })).toBeInTheDocument();
-    expect(screen.getByText("Week 7 live")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Weeks 5–9 leaderboard" })).toBeInTheDocument();
     expect(screen.getByText("2 weeks left")).toBeInTheDocument();
     const rows = within(screen.getByRole("list", { name: "Standings" })).getAllByRole("listitem");
     expect(rows[0]).toHaveTextContent("Ryan McCoy");
@@ -44,14 +41,14 @@ describe("MonthlyLeaderboard", () => {
     expect(within(rows[1]!).getByText("14.0 behind")).toBeInTheDocument();
   });
 
-  it("MonthlyLeaderboard_moreThanFiveTeams_showsTopFiveAndExpandsForTheRest", async () => {
+  it("InSeasonPrizeLeaderboard_moreThanFiveTeams_showsTopFiveAndExpandsForTheRest", async () => {
     const standings = Array.from({ length: 7 }, (_, index) => ({
       teamId: index + 1,
       ownerName: `Person ${index + 1}`,
       points: 700 - index * 10,
       behind: index * 10,
     }));
-    render(<MonthlyLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, standings } }} />);
+    render(<InSeasonPrizeLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, standings } }} />);
 
     expect(within(screen.getByRole("list", { name: "Standings" })).getAllByRole("listitem")).toHaveLength(5);
     const details = screen.getByText("Show all 7").closest("details")!;
@@ -64,42 +61,48 @@ describe("MonthlyLeaderboard", () => {
     expect(more.map((row) => row.textContent)).toEqual([expect.stringContaining("Person 6"), expect.stringContaining("Person 7")]);
   });
 
-  it.each([
-    [[9], 8, "1 week left"],
-    [[], 9, "Final week"],
-    [[], null, "Final"],
-  ])("MonthlyLeaderboard_remainingWeeks%j_labels%s", (remainingWeeks, liveWeek, label) => {
-    render(<MonthlyLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, remainingWeeks, liveWeek } }} />);
+  it("InSeasonPrizeLeaderboard_oneWeekRemaining_labelsSingularWeek", () => {
+    render(<InSeasonPrizeLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, remainingWeeks: [9] } }} />);
 
-    expect(screen.getByText(label)).toBeInTheDocument();
+    expect(screen.getByText("1 week left")).toBeInTheDocument();
   });
 
-  it("MonthlyLeaderboard_fiveOrFewerTeams_hasNoExpand", () => {
-    render(<MonthlyLeaderboard report={REPORT} />);
+  it("InSeasonPrizeLeaderboard_noWeeksRemaining_hasNoWeeksLeftLabel", () => {
+    render(<InSeasonPrizeLeaderboard report={{ ...REPORT, current: { ...REPORT.current!, remainingWeeks: [] } }} />);
+
+    expect(screen.queryByText(/left$/)).not.toBeInTheDocument();
+  });
+
+  it("InSeasonPrizeLeaderboard_fiveOrFewerTeams_hasNoExpand", () => {
+    render(<InSeasonPrizeLeaderboard report={REPORT} />);
 
     expect(screen.queryByText(/Show all/)).not.toBeInTheDocument();
   });
 
-  it("MonthlyLeaderboard_finishedMonths_listsWinnersIncludingTies", () => {
-    render(<MonthlyLeaderboard report={REPORT} />);
+  it("InSeasonPrizeLeaderboard_finishedPeriods_listsWinnersIncludingTies", () => {
+    render(<InSeasonPrizeLeaderboard report={REPORT} />);
 
     const winners = within(screen.getByRole("list", { name: "Past winners" })).getAllByRole("listitem");
     expect(winners).toHaveLength(1);
-    expect(winners[0]).toHaveTextContent("September");
+    expect(winners[0]).toHaveTextContent("Weeks 1–4");
     expect(winners[0]).toHaveTextContent("Sam Longietti & Ty Houle");
     expect(winners[0]).toHaveTextContent("612.4");
   });
 
-  it("MonthlyLeaderboard_noPointsYet_showsEmptyState", () => {
-    const report: MonthlyLeaderboardReport = {
+  it("InSeasonPrizeLeaderboard_noPointsYet_showsEmptyState", () => {
+    const report: InSeasonPrizeLeaderboardReport = {
       season: 2026,
-      current: { month: "2026-09", weeks: [1], liveWeek: 1, remainingWeeks: [], standings: [{ teamId: 1, ownerName: "Sam Longietti", points: 0, behind: 0 }] },
+      current: {
+        period: { firstWeek: 1, lastWeek: 4 },
+        remainingWeeks: [2, 3, 4],
+        standings: [{ teamId: 1, ownerName: "Sam Longietti", points: 0, behind: 0 }],
+      },
       winners: [],
     };
 
-    render(<MonthlyLeaderboard report={report} />);
+    render(<InSeasonPrizeLeaderboard report={report} />);
 
-    expect(screen.getByText("No games played yet this month.")).toBeInTheDocument();
+    expect(screen.getByText("No games played yet.")).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Past winners" })).not.toBeInTheDocument();
   });
 });

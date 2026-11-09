@@ -10,12 +10,12 @@ import { FlightDrawer } from "@/components/FlightDrawer/FlightDrawer";
 import { ItineraryDetails } from "@/components/ItineraryDetails/ItineraryDetails";
 import { ItinerarySkeleton } from "@/components/ItinerarySkeleton/ItinerarySkeleton";
 import { MapLegend } from "@/components/MapLegend/MapLegend";
-import { MonthlyLeaderboard } from "@/components/MonthlyLeaderboard/MonthlyLeaderboard";
+import { InSeasonPrizeLeaderboard } from "@/components/InSeasonPrizeLeaderboard/InSeasonPrizeLeaderboard";
 import { MoonDrawer } from "@/components/MoonDrawer/MoonDrawer";
 import { TripOddsTable } from "@/components/TripOddsTable/TripOddsTable";
 import { TripTable } from "@/components/TripTable/TripTable";
 import type { FlightPanelState } from "@/types/flightPanelState";
-import type { MonthlyLeaderboardReport } from "@/types/monthlyLeaderboardReport";
+import type { InSeasonPrizeLeaderboardReport } from "@/types/inSeasonPrizeLeaderboardReport";
 import type { MoonPanelState } from "@/types/moonPanelState";
 import type { MoonSplitReport } from "@/types/moonSplitReport";
 import type { TripDetail } from "@/types/tripDetail";
@@ -33,10 +33,10 @@ export interface TripDashboardProps {
   initialDate: string;
   initialSummaries: TripSummary[];
   tripOdds: TripOddsReport | null;
-  monthlyLeaderboard: MonthlyLeaderboardReport | null;
+  inSeasonPrizeLeaderboard: InSeasonPrizeLeaderboardReport | null;
 }
 
-export function TripDashboard({ initialDate, initialSummaries, tripOdds, monthlyLeaderboard }: TripDashboardProps) {
+export function TripDashboard({ initialDate, initialSummaries, tripOdds, inSeasonPrizeLeaderboard }: TripDashboardProps) {
   const router = useRouter();
   const [date, setDate] = useState(initialDate);
   const [summaries, setSummaries] = useState(initialSummaries);
@@ -200,9 +200,9 @@ export function TripDashboard({ initialDate, initialSummaries, tripOdds, monthly
               {detail && <ItineraryDetails detail={detail} />}
             </>
           )}
-          {monthlyLeaderboard && (
+          {inSeasonPrizeLeaderboard && (
             <div className="mt-3">
-              <MonthlyLeaderboard report={monthlyLeaderboard} />
+              <InSeasonPrizeLeaderboard report={inSeasonPrizeLeaderboard} />
             </div>
           )}
         </section>

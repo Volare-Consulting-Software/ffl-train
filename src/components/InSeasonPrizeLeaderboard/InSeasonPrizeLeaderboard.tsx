@@ -1,26 +1,23 @@
-import { ChevronDown, Radio, Trophy } from "lucide-react";
+import { ChevronDown, Trophy } from "lucide-react";
 
-import { formatMonth } from "@/lib/format";
-import type { MonthlyLeaderboardReport } from "@/types/monthlyLeaderboardReport";
-import type { MonthStanding } from "@/types/monthStanding";
+import type { InSeasonPrizeLeaderboardReport } from "@/types/inSeasonPrizeLeaderboardReport";
+import type { PrizePeriod } from "@/types/prizePeriod";
+import type { PrizeStanding } from "@/types/prizeStanding";
 
-export interface MonthlyLeaderboardProps {
-  report: MonthlyLeaderboardReport;
+export interface InSeasonPrizeLeaderboardProps {
+  report: InSeasonPrizeLeaderboardReport;
 }
 
 const TOP_COUNT = 5;
 
 const points = (value: number) => value.toFixed(1);
 
-/** How much of the month is still to play, counting weeks that haven't kicked off yet. */
-function weeksLeftLabel(remaining: number, liveWeek: number | null): string {
-  if (remaining > 0) {
-    return `${remaining} ${remaining === 1 ? "week" : "weeks"} left`;
-  }
-  return liveWeek !== null ? "Final week" : "Final";
-}
+const weekRange = ({ firstWeek, lastWeek }: PrizePeriod) => `Weeks ${firstWeek}–${lastWeek}`;
 
-function StandingRow({ standing, rank }: { standing: MonthStanding; rank: number }) {
+/** How much of the period is still to play, counting weeks that haven't kicked off yet. */
+const weeksLeftLabel = (remaining: number) => `${remaining} ${remaining === 1 ? "week" : "weeks"} left`;
+
+function StandingRow({ standing, rank }: { standing: PrizeStanding; rank: number }) {
   const leading = standing.behind === 0;
   return (
     <li
@@ -40,36 +37,23 @@ function StandingRow({ standing, rank }: { standing: MonthStanding; rank: number
   );
 }
 
-/** This month's points leader and how far everyone else trails, plus each finished month's winner. */
-export function MonthlyLeaderboard({ report }: MonthlyLeaderboardProps) {
+/** The current prize period's points leader and how far everyone else trails, plus each finished period's winner. */
+export function InSeasonPrizeLeaderboard({ report }: InSeasonPrizeLeaderboardProps) {
   const { current, winners } = report;
   const leader = current?.standings[0];
   const played = leader !== undefined && current!.standings.some((standing) => standing.points > 0);
-  const weekRange =
-    current && (current.weeks.length === 1 ? `Week ${current.weeks[0]}` : `Weeks ${current.weeks[0]}–${current.weeks.at(-1)}`);
   const topStandings = current?.standings.slice(0, TOP_COUNT) ?? [];
   const moreStandings = current?.standings.slice(TOP_COUNT) ?? [];
 
   return (
-    <section aria-labelledby="monthly-leaderboard-title" className="@container flex flex-col gap-3">
+    <section aria-labelledby="in-season-prize-leaderboard-title" className="@container flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="monthly-leaderboard-title" className="flex items-center gap-2 text-xl font-semibold text-fg">
+        <h2 id="in-season-prize-leaderboard-title" className="flex items-center gap-2 text-xl font-semibold text-fg">
           <Trophy className="size-5" aria-hidden="true" />
-          {current ? `${formatMonth(current.month)} leaderboard` : "Monthly leaderboard"}
+          {current ? `${weekRange(current.period)} leaderboard` : "In-season prize leaderboard"}
         </h2>
-        {current && (
-          <p className="flex flex-wrap items-center gap-2 text-sm text-fg-secondary">
-            <span>
-              {weekRange} ·{" "}
-              <span className="font-semibold text-fg-body">{weeksLeftLabel(current.remainingWeeks.length, current.liveWeek)}</span>
-            </span>
-            {current.liveWeek !== null && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-semibold text-brand dark:bg-surface-raised dark:text-fg">
-                <Radio className="size-3" aria-hidden="true" />
-                Week {current.liveWeek} live
-              </span>
-            )}
-          </p>
+        {current && current.remainingWeeks.length > 0 && (
+          <p className="text-sm font-semibold text-fg-body">{weeksLeftLabel(current.remainingWeeks.length)}</p>
         )}
       </div>
 
@@ -98,22 +82,25 @@ export function MonthlyLeaderboard({ report }: MonthlyLeaderboardProps) {
               )}
             </>
           ) : (
-            <p className="px-4 py-6 text-sm text-fg-secondary">No games played yet this month.</p>
+            <p className="px-4 py-6 text-sm text-fg-secondary">No games played yet.</p>
           )}
         </div>
 
         {winners.length > 0 && (
-          <aside aria-labelledby="monthly-winners-title" className="flex flex-col gap-2 self-start rounded-lg bg-surface-raised p-4">
-            <h3 id="monthly-winners-title" className="text-sm font-semibold text-fg-secondary">
+          <aside
+            aria-labelledby="in-season-prize-winners-title"
+            className="flex flex-col gap-2 self-start rounded-lg bg-surface-raised p-4"
+          >
+            <h3 id="in-season-prize-winners-title" className="text-sm font-semibold text-fg-secondary">
               Past winners
             </h3>
             <ul aria-label="Past winners" className="flex flex-col gap-3 text-sm">
               {winners.map((winner) => (
-                <li key={winner.month} className="flex items-start gap-2">
+                <li key={winner.period.firstWeek} className="flex items-start gap-2">
                   <Trophy className="mt-0.5 size-4 shrink-0 text-brand dark:text-fg" aria-hidden="true" />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="text-xs text-fg-secondary">{formatMonth(winner.month)}</span>
+                      <span className="text-xs text-fg-secondary">{weekRange(winner.period)}</span>
                       <span className="tabular-nums text-fg-body">{points(winner.points)}</span>
                     </span>
                     <span className="font-semibold text-fg">{winner.teams.map((team) => team.ownerName).join(" & ")}</span>

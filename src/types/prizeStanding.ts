@@ -1,5 +1,5 @@
-/** A team's points for a month and how far it trails that month's leader. */
-export interface MonthStanding {
+/** A team's points for a prize period and how far it trails that period's leader. */
+export interface PrizeStanding {
   teamId: number;
   ownerName: string;
   points: number;
